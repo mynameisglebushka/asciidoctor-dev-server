@@ -1,0 +1,42 @@
+{
+	"name": "asciidoctor-dev-server",
+	"version": "0.0.1",
+	"author": "Gleb Glazkov",
+	"description": "Dev server for asciidoctor.js processor",
+	"type": "module",
+	"bin": {
+		"asciidoctor-dev-server": "./bin/asciidoctor-dev-server.js"
+	},
+	"scripts": {
+		"build": "rm -rf dist && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+		"server": "node ./bin/asciidoctor-dev-server.js",
+		"bs": "pnpm build && pnpm run server",
+		"path": "pnpm link -g"
+	},
+	"keywords": [
+		"asciidoc"
+	],
+	"license": "-",
+	"devDependencies": {
+		"@eslint/js": "^9.18.0",
+		"@rollup/plugin-typescript": "^12.1.2",
+		"@types/chokidar": "^2.1.7",
+		"@types/jsdom": "^21.1.7",
+		"@types/node": "^22.10.5",
+		"@types/ws": "^8.5.13",
+		"eslint": "^9.18.0",
+		"globals": "^15.14.0",
+		"prettier": "^3.4.2",
+		"rollup": "^4.30.1",
+		"tslib": "^2.8.1",
+		"typescript": "^5.7.2",
+		"typescript-eslint": "^8.19.1"
+	},
+	"dependencies": {
+		"@asciidoctor/core": "^3.0.4",
+		"asciidoctor": "^3.0.4",
+		"chokidar": "^4.0.3",
+		"jsdom": "^26.0.0",
+		"ws": "^8.18.0"
+	}
+}
