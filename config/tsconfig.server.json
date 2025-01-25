@@ -1,0 +1,11 @@
+{
+	"extends": "./tsconfig.base.json",
+	"include": ["../src/server"], // Включаем только серверный код
+	"compilerOptions": {
+		"lib": ["ES2023", "DOM"], // DOM because we have client code that gets inlined via function.toString()
+		"target": "ES2022",
+		"skipLibCheck": true, // lib check is done on final types
+		"stripInternal": true,
+    "declarationDir": "../dist/server/types"
+	}
+}
