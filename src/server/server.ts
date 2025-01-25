@@ -1,9 +1,10 @@
-import { IncomingMessage, Server, ServerResponse } from 'node:http';
+import { Server } from 'node:http';
 import { readFileSync } from 'node:fs';
 
 import { AdocRenderer } from './asciidoctor.js';
 import { HtmlRenderer } from './html.js';
 import { Router } from './router.js';
+import { HandlerFunc, Middleware } from './types/routing.js';
 
 export class DevServer {
 	private clientSctiptPattern = /@asciidoctor-dev-client/;
@@ -20,34 +21,55 @@ export class DevServer {
 		return this._server;
 	}
 
-	private handler = (req: IncomingMessage, res: ServerResponse) => {
+	private handleScripts = (): Middleware => {
+		return (next: HandlerFunc): HandlerFunc => {
+			return (req, res) => {
+				if (this.clientSctiptPattern.test(req.url || '')) {
+					const devClient = readFileSync(
+						'./dist/client/@asciidoctor-dev-client.js',
+						{ encoding: 'utf-8' },
+					);
+
+					const code = devClient.replace(
+						'__PORT__',
+						JSON.stringify(this.serverPort),
+					);
+
+					res.writeHead(200, {
+						'content-type': 'text/javascript',
+					}).end(code);
+
+					return;
+				}
+				next(req, res);
+			};
+		};
+	};
+
+	private handleHome = (): Middleware => {
+		return (next: HandlerFunc): HandlerFunc => {
+			return (req, res) => {
+				let url = req.url || '';
+
+				url = url.replace(this.base, '');
+
+				if (!url) {
+					res.writeHead(200, { 'content-type': 'text/html' }).end(
+						this.html.home(this.router.routes),
+					);
+					return;
+				}
+
+				next(req, res);
+			};
+		};
+	};
+
+	private handleRender: HandlerFunc = (req, res) => {
 		try {
-			let url = req.url;
-
-			if (!url) return;
-
-			if (this.clientSctiptPattern.test(url)) {
-				const devClient = readFileSync(
-					'./dist/client/@asciidoctor-dev-client.js',
-					{ encoding: 'utf-8' },
-				);
-
-				const code = devClient.replace(
-					'__PORT__',
-					JSON.stringify(this.serverPort),
-				);
-
-				handleScript(code);
-
-				return;
-			}
+			let url = req.url || '';
 
 			url = url.replace(this.base, '');
-
-			if (!url) {
-				writeReponse(this.html.home(this.router.routes));
-				return;
-			}
 
 			const path = this.router.getFilePath(url);
 			if (!path) {
@@ -63,22 +85,23 @@ export class DevServer {
 			}
 
 			writeReponse(this.html.render(convertedDocument));
-		} catch (error) {
-			const e = error as Error;
-			console.error(e.stack);
-
-			res.writeHead(500).end(e.stack);
+		} catch (e) {
+			console.error(e);
 		}
 
 		function writeReponse(html: string) {
 			res.writeHead(200, { 'content-type': 'text/html' }).end(html);
 		}
+	};
 
-		function handleScript(script: string) {
-			res.writeHead(200, { 'content-type': 'text/javascript' }).end(
-				script,
-			);
-		}
+	private chain = (...xs: Middleware[]): Middleware => {
+		return (next: HandlerFunc): HandlerFunc => {
+			for (let i = xs.length - 1; i >= 0; i--) {
+				const x = xs[i];
+				next = x(next);
+			}
+			return next;
+		};
 	};
 
 	constructor(
@@ -92,7 +115,9 @@ export class DevServer {
 		this.html = html;
 		this.router = router;
 
-		this._server = new Server(this.handler);
+		const chain = this.chain(this.handleScripts(), this.handleHome());
+
+		this._server = new Server(chain(this.handleRender));
 	}
 
 	listen(cb?: () => void) {

@@ -29,10 +29,10 @@ export class Watcher {
 			this.router.removeRoute(path);
 		});
 
-		this.watcher.on('change', () => {
-			this.wss.sendEventToAllConnectedClients({
-				type: 'reload',
-			});
-		});
+		// this.watcher.on('change', () => {
+		// 	this.wss.sendEventToAllConnectedClients({
+		// 		type: 'reload',
+		// 	});
+		// });
 	}
 }
