@@ -1,23 +1,23 @@
-import Asciidoctor from "asciidoctor";
-import type { Asciidoctor as TAsciidoctor } from "asciidoctor";
+import Processor from 'asciidoctor';
+import type { Asciidoctor } from 'asciidoctor';
 
 export class AdocRenderer {
-	private asciidoc: TAsciidoctor;
+	private asciidoc: Asciidoctor;
 
 	constructor() {
-		this.asciidoc = Asciidoctor();
+		this.asciidoc = Processor();
 	}
 
 	convert(filePath: string) {
 		const convertedDocument = this.asciidoc.convertFile(filePath, {
 			standalone: true,
 			to_file: false,
-			safe: "safe",
+			safe: 'safe',
 		});
 
 		let result: string;
 
-		if (typeof convertedDocument === "string") {
+		if (typeof convertedDocument === 'string') {
 			result = convertedDocument;
 		} else {
 			result = convertedDocument.convert();

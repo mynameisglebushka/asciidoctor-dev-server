@@ -55,7 +55,7 @@ export class DevServer {
 
 				if (!url) {
 					res.writeHead(200, { 'content-type': 'text/html' }).end(
-						this.html.home(this.router.routes),
+						this.html.home(),
 					);
 					return;
 				}
@@ -73,7 +73,7 @@ export class DevServer {
 
 			const path = this.router.getFilePath(url);
 			if (!path) {
-				writeReponse(this.html.notFound(url, this.router.routes));
+				writeReponse(this.html.notFound(url));
 				return;
 			}
 

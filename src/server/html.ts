@@ -1,14 +1,18 @@
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 import { JSDOM } from 'jsdom';
+import { Router } from './router';
 
 export class HtmlRenderer {
+	private router: Router;
 	private homeTemplate: string;
 	private notFoundTemplate: string;
 	private renderedTemplate: string;
 	private plainTemplate: string;
 
-	constructor() {
+	constructor(router: Router) {
+		this.router = router;
+
 		this.homeTemplate = readFileSync('./public/home_page.html', {
 			encoding: 'utf-8',
 		});
@@ -26,21 +30,21 @@ export class HtmlRenderer {
 		});
 	}
 
-	public home(routes: Map<string, string>): string {
+	public home(): string {
 		let result: string = '';
 
-		routes.forEach((v: string, k: string) => {
-			result += `<span><a href="/${k}">${k}</a> => ${basename(v)}</span>`;
+		this.router.routes.forEach((v, k) => {
+			result += `<span><a href="/${k}">${k}</a> => ${basename(v.file)}</span>`;
 		});
 
 		return this.homeTemplate.replace(`<!--app-html-->`, result);
 	}
 
-	public notFound(url: string, routes: Map<string, string>): string {
+	public notFound(url: string): string {
 		let result: string = `<h1>Nothing was found on the ${url || '/'}</h1>`;
 
-		routes.forEach((v: string, k: string) => {
-			result += `<span><a href="/${k}">${k}</a> => ${basename(v)}</span>`;
+		this.router.routes.forEach((v, k) => {
+			result += `<span><a href="/${k}">${k}</a> => ${basename(v.file)}</span>`;
 		});
 
 		return this.notFoundTemplate.replace(`<!--app-html-->`, result);
@@ -51,8 +55,15 @@ export class HtmlRenderer {
 			contentType: 'text/html',
 		});
 
+		let r: string = '';
+
+		this.router.routes.forEach((v, k) => {
+			r += `<a href="/${k}">${v.title || `no title for ${basename(v.file)}`}</a>`;
+		});
+
 		return this.renderedTemplate
 			.replace(`<!--app-head-->`, html.window.document.head.innerHTML)
+			.replace('<!--router-->', r)
 			.replace(`<!--app-html-->`, html.window.document.body.innerHTML);
 	}
 

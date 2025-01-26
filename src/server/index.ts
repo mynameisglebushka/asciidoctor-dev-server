@@ -12,9 +12,9 @@ const httpPort = 8081;
 const cwd = process.cwd();
 
 export function createDevServer(options?: AsciiDoctorDevServerOptions) {
-	const asciidoctor = new AdocRenderer();
-	const html = new HtmlRenderer();
 	const router = new Router(cwd);
+	const asciidoctor = new AdocRenderer();
+	const html = new HtmlRenderer(router);
 
 	const serverPort = options?.server?.port || httpPort;
 

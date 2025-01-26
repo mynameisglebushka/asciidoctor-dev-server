@@ -1,9 +1,10 @@
-export type WebSocketEventType = 'reload' | 'custom';
+export type WebSocketEventType = 'file_change' | 'file_remove' | 'file_added';
 
 export interface WebSocketEvent {
 	type: WebSocketEventType;
 	data?: {
-		message: string;
+		file?: string;
+		message?: string;
 	};
 }
 

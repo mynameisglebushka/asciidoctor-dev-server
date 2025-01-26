@@ -17,7 +17,7 @@ export class Watcher {
 		this.wss = wss;
 
 		this.watcher = chokidar.watch(this.cwd, {
-			ignored: [/^\./, /node_modules/],
+			ignored: [/(^|[\/\\])\../, 'node_modules'],
 			cwd: this.cwd,
 		});
 
@@ -29,10 +29,13 @@ export class Watcher {
 			this.router.removeRoute(path);
 		});
 
-		// this.watcher.on('change', () => {
-		// 	this.wss.sendEventToAllConnectedClients({
-		// 		type: 'reload',
-		// 	});
-		// });
+		this.watcher.on('change', (path: string) => {
+			this.wss.sendEventToAllConnectedClients({
+				type: 'file_change',
+				data: {
+					file: path,
+				},
+			});
+		});
 	}
 }
