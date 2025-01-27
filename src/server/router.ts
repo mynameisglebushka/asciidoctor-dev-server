@@ -3,17 +3,15 @@ import { parse, join } from 'node:path';
 
 export class Router {
 	private readonly cwd: string;
-	private readonly _routes: Map<string, string>;
-	private readonly __routes: Map<string, { title: string; file: string }>;
+	private readonly _routes: Map<string, { title: string; file: string }>;
 
-	get routes(){
-		return this.__routes;
+	get routes() {
+		return this._routes;
 	}
 
 	constructor(cwd: string) {
 		this.cwd = cwd;
 		this._routes = new Map();
-		this.__routes = new Map();
 
 		this.setupRouter();
 	}
@@ -26,39 +24,19 @@ export class Router {
 				if (err) console.log(err);
 				else {
 					files.forEach((_file) => {
-						if (
-							/(^|[/\\])\../.test(_file) ||
-							_file.includes('node_modules')
-						)
-							return;
-
 						const ok = this.checkFile(_file);
 
 						if (!ok) return;
 
 						const { route, file } = ok;
 
-						const content = readFileSync(_file, {
-							encoding: 'utf-8',
-						});
+						const title = this.getTitle(_file);
 
-						const regRes = /^= ([^\n]+)/.exec(content);
-
-						let title: string = '';
-
-						if (regRes && regRes.length === 2) {
-							title = regRes[1];
-						}
-
-						if (!this.__routes.has(route)) {
-							this.__routes.set(route, {
+						if (!this._routes.has(route)) {
+							this._routes.set(route, {
 								file: file,
 								title: title,
 							});
-						}
-
-						if (!this._routes.has(route)) {
-							this._routes.set(route, file);
 						}
 					});
 				}
@@ -73,8 +51,13 @@ export class Router {
 
 		const { route, file } = ok;
 
+		const title = this.getTitle(filePath);
+
 		if (!this._routes.has(route)) {
-			this._routes.set(route, file);
+			this._routes.set(route, {
+				file: file,
+				title: title,
+			});
 		}
 	}
 
@@ -89,10 +72,16 @@ export class Router {
 	}
 
 	getFilePath(url: string): string | undefined {
-		return this._routes.get(url);
+		const r = this._routes.get(url);
+
+		if (!r) return;
+
+		return r.file;
 	}
 
 	private checkFile(path: string) {
+		if (/(^|[/\\])\../.test(path) || path.includes('node_modules')) return;
+
 		const pp = parse(path);
 
 		if (pp.ext !== '.adoc') return;
@@ -101,5 +90,21 @@ export class Router {
 			route: join(pp.dir, pp.name),
 			file: join(pp.dir, pp.base),
 		};
+	}
+
+	private getTitle(path: string) {
+		const content = readFileSync(path, {
+			encoding: 'utf-8',
+		});
+
+		const regRes = /^= ([^\n]+)/.exec(content);
+
+		let title: string = '';
+
+		if (regRes && regRes.length === 2) {
+			title = regRes[1];
+		}
+
+		return title;
 	}
 }
