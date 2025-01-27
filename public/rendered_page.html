@@ -24,16 +24,34 @@
 				}
 			}
 
-			function initAnimation() {
+			function initRouter() {
+				isRouterVisible = false;
+
 				const block = document.getElementById('router');
 
+				// hide router above the screen
 				blockHeight = block.offsetHeight;
-
 				block.style.top = `-${blockHeight}px`;
-				isRouterVisible = false;
+
+				// mark current page
+				Array.from(block.children).forEach((element) => {
+					const span = element.children.item(0);
+
+					if (!span) return;
+
+					const i = span.innerText.lastIndexOf('.');
+
+					if (!i) return;
+
+					const path = span.innerText.slice(0, i);
+
+					if (window.location.pathname === '/' + path) {
+						element.style.fontWeight = 'bold';
+					}
+				});
 			}
 
-			window.addEventListener('load', initAnimation);
+			window.addEventListener('load', initRouter);
 		</script>
 		<style>
 			#router-manager {
@@ -78,6 +96,30 @@
 				color: black;
 
 				transition: top 0.5s ease-in-out;
+			}
+
+			.router-link {
+				display: flex;
+				flex-direction: column;
+
+				margin: 5px;
+				gap: 3px;
+
+				span {
+					align-self: flex-start;
+				}
+
+				a {
+					align-self: flex-end;
+
+					text-decoration: none;
+
+					transition: transform 0.3s ease;
+				}
+
+				a:hover {
+					transform: translateX(-5px);
+				}
 			}
 		</style>
 		<button id="router-manager" onclick="manager_click()">Router</button>

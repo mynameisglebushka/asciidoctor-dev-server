@@ -58,7 +58,7 @@ export class HtmlRenderer {
 		let r: string = '';
 
 		this.router.routes.forEach((v, k) => {
-			r += `<a href="/${k}">${v.title || `no title for ${basename(v.file)}`}</a>`;
+			r += `<div class="router-link"><span>${v.file}:</span><a href="/${k}">${v.title || 'title not found'}</a></div>`;
 		});
 
 		return this.renderedTemplate
