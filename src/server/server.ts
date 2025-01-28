@@ -7,7 +7,15 @@ import { Router } from './router.js';
 import { HandlerFunc, Middleware } from './types/routing.js';
 
 export class DevServer {
-	private clientSctiptPattern = /@asciidoctor-dev-client/;
+	private staticFiles: Map<
+		RegExp,
+		{
+			path: string;
+			contentType: string;
+			modify?: (content: string) => string;
+		}
+	>;
+
 	private base = '/';
 	private serverPort: number;
 
@@ -21,27 +29,40 @@ export class DevServer {
 		return this._server;
 	}
 
-	private handleScripts = (): Middleware => {
+	private handleStaticFile = (): Middleware => {
 		return (next: HandlerFunc): HandlerFunc => {
 			return (req, res) => {
-				if (this.clientSctiptPattern.test(req.url || '')) {
-					const devClient = readFileSync(
-						'./dist/client/@asciidoctor-dev-client.js',
-						{ encoding: 'utf-8' },
-					);
-
-					const code = devClient.replace(
-						'__PORT__',
-						JSON.stringify(this.serverPort),
-					);
-
-					res.writeHead(200, {
-						'content-type': 'text/javascript',
-					}).end(code);
-
+				if (req.url === undefined) {
+					next(req, res);
 					return;
 				}
-				next(req, res);
+
+				let content: string = '';
+				let contentType: string = '';
+
+				this.staticFiles.forEach((val, pattern) => {
+					if (content) return;
+
+					if (pattern.test(req.url || '')) {
+						const fileContent = readFileSync(val.path, {
+							encoding: 'utf-8',
+						});
+
+						content = val.modify
+							? val.modify(fileContent)
+							: fileContent;
+
+						contentType = val.contentType;
+					}
+				});
+
+				if (content) {
+					res.writeHead(200, {
+						'content-type': contentType,
+					}).end(content);
+				} else {
+					next(req, res);
+				}
 			};
 		};
 	};
@@ -115,7 +136,27 @@ export class DevServer {
 		this.html = html;
 		this.router = router;
 
-		const chain = this.chain(this.handleScripts(), this.handleHome());
+		this.staticFiles = new Map()
+			.set(/@asciidoctor-dev-client/, {
+				path: './dist/client/@asciidoctor-dev-client.js',
+				contentType: 'text/javascript',
+				modify: (content: string) => {
+					return content.replace(
+						'__PORT__',
+						JSON.stringify(this.serverPort),
+					);
+				},
+			})
+			.set(/@asciidoctor-dev-render-style/, {
+				path: './public/asciidoctor-dev-render.css',
+				contentType: 'text/css',
+			})
+			.set(/@asciidoctor-dev-self-page-style/, {
+				path: './public/asciidoctor-dev-self-page.css',
+				contentType: 'text/css',
+			});
+
+		const chain = this.chain(this.handleStaticFile(), this.handleHome());
 
 		this._server = new Server(chain(this.handleRender));
 	}

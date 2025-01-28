@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { basename } from 'node:path';
 import { JSDOM } from 'jsdom';
 import { Router } from './router';
 
@@ -31,23 +30,19 @@ export class HtmlRenderer {
 	}
 
 	public home(): string {
-		let result: string = '';
+		const result: string = '';
 
-		this.router.routes.forEach((v, k) => {
-			result += `<span><a href="/${k}">${k}</a> => ${basename(v.file)}</span>`;
-		});
-
-		return this.homeTemplate.replace(`<!--app-html-->`, result);
+		return this.homeTemplate
+			.replace(`<!--app-html-->`, result)
+			.replace('<!--router-->', this.buildRoutes());
 	}
 
 	public notFound(url: string): string {
-		let result: string = `<h1>Nothing was found on the ${url || '/'}</h1>`;
+		const result: string = `<h1>Nothing was found on the ${url || '/'}</h1>`;
 
-		this.router.routes.forEach((v, k) => {
-			result += `<span><a href="/${k}">${k}</a> => ${basename(v.file)}</span>`;
-		});
-
-		return this.notFoundTemplate.replace(`<!--app-html-->`, result);
+		return this.notFoundTemplate
+			.replace(`<!--app-html-->`, result)
+			.replace('<!--router-->', this.buildRoutes());
 	}
 
 	public render(asciidocHtml: string): string {
@@ -55,17 +50,21 @@ export class HtmlRenderer {
 			contentType: 'text/html',
 		});
 
+		return this.renderedTemplate
+			.replace(`<!--app-head-->`, html.window.document.head.innerHTML)
+			.replace('<!--router-->', this.buildRoutes())
+			.replace(`<!--app-html-->`, html.window.document.body.innerHTML);
+	}
+
+	public plain() {}
+
+	private buildRoutes(): string {
 		let r: string = '';
 
 		this.router.routes.forEach((v, k) => {
 			r += `<div class="router-link"><span>${v.file}:</span><a href="/${k}">${v.title || 'title not found'}</a></div>`;
 		});
 
-		return this.renderedTemplate
-			.replace(`<!--app-head-->`, html.window.document.head.innerHTML)
-			.replace('<!--router-->', r)
-			.replace(`<!--app-html-->`, html.window.document.body.innerHTML);
+		return r;
 	}
-
-	public plain() {}
 }

@@ -1,0 +1,21 @@
+body {
+	display: flex;
+	flex-direction: column;
+
+	justify-content: center;
+	align-items: center;
+}
+
+#main-router {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid black;
+	gap: 3px;
+	padding: 10px;
+}
+
+.router-link {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+}
