@@ -5,6 +5,7 @@ import { AdocRenderer } from './asciidoctor.js';
 import { HtmlRenderer } from './html.js';
 import { Router } from './router.js';
 import { HandlerFunc, Middleware } from './types/routing.js';
+import { resolve } from 'node:path';
 
 export class DevServer {
 	private staticFiles: Map<
@@ -126,7 +127,7 @@ export class DevServer {
 	};
 
 	constructor(
-		opts: { port: number },
+		opts: { port: number; sd: string },
 		asciidoctor: AdocRenderer,
 		html: HtmlRenderer,
 		router: Router,
@@ -138,7 +139,7 @@ export class DevServer {
 
 		this.staticFiles = new Map()
 			.set(/@asciidoctor-dev-client/, {
-				path: './dist/client/@asciidoctor-dev-client.js',
+				path: resolve(opts.sd, '../client/@asciidoctor-dev-client.js'),
 				contentType: 'text/javascript',
 				modify: (content: string) => {
 					return content.replace(
@@ -148,11 +149,17 @@ export class DevServer {
 				},
 			})
 			.set(/@asciidoctor-dev-render-style/, {
-				path: './public/asciidoctor-dev-render.css',
+				path: resolve(
+					opts.sd,
+					'../../public/asciidoctor-dev-render.css',
+				),
 				contentType: 'text/css',
 			})
 			.set(/@asciidoctor-dev-self-page-style/, {
-				path: './public/asciidoctor-dev-self-page.css',
+				path: resolve(
+					opts.sd,
+					'../../public/asciidoctor-dev-self-page.css',
+				),
 				contentType: 'text/css',
 			});
 

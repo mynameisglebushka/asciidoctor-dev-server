@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 import { Router } from './router';
+import { resolve } from 'node:path';
 
 export class HtmlRenderer {
 	private router: Router;
@@ -9,24 +10,36 @@ export class HtmlRenderer {
 	private renderedTemplate: string;
 	private plainTemplate: string;
 
-	constructor(router: Router) {
+	constructor(router: Router, sd: string) {
 		this.router = router;
 
-		this.homeTemplate = readFileSync('./public/home_page.html', {
-			encoding: 'utf-8',
-		});
+		this.homeTemplate = readFileSync(
+			resolve(sd, '../../public/home_page.html'),
+			{
+				encoding: 'utf-8',
+			},
+		);
 
-		this.notFoundTemplate = readFileSync('./public/notfound_page.html', {
-			encoding: 'utf-8',
-		});
+		this.notFoundTemplate = readFileSync(
+			resolve(sd, '../../public/notfound_page.html'),
+			{
+				encoding: 'utf-8',
+			},
+		);
 
-		this.renderedTemplate = readFileSync('./public/rendered_page.html', {
-			encoding: 'utf-8',
-		});
+		this.renderedTemplate = readFileSync(
+			resolve(sd, '../../public/rendered_page.html'),
+			{
+				encoding: 'utf-8',
+			},
+		);
 
-		this.plainTemplate = readFileSync('./public/plain_page.html', {
-			encoding: 'utf-8',
-		});
+		this.plainTemplate = readFileSync(
+			resolve(sd, '../../public/plain_page.html'),
+			{
+				encoding: 'utf-8',
+			},
+		);
 	}
 
 	public home(): string {

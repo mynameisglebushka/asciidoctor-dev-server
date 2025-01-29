@@ -7,19 +7,22 @@ import { DevServer } from './server.js';
 import { WSServer } from './websocket.js';
 
 import { cursorTo, clearScreenDown } from 'node:readline';
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
 
 const httpPort = 8081;
-const cwd = process.cwd();
+const cwd = process.cwd(); // current working directory
+const sd = dirname(fileURLToPath(import.meta.url)); // script directory
 
 export function createDevServer(options?: AsciiDoctorDevServerOptions) {
 	const router = new Router(cwd);
 	const asciidoctor = new AdocRenderer();
-	const html = new HtmlRenderer(router);
+	const html = new HtmlRenderer(router, sd);
 
 	const serverPort = options?.server?.port || httpPort;
 
 	const devServer = new DevServer(
-		{ port: serverPort },
+		{ port: serverPort, sd: sd },
 		asciidoctor,
 		html,
 		router,
