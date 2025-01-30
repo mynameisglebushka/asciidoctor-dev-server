@@ -9,53 +9,7 @@
 		<!--app-head-->
 	</head>
 	<body>
-		<script>
-			let isRouterVisible;
-			let blockHeight;
-
-			function manager_click() {
-				const router = document.getElementById('router');
-
-				if (isRouterVisible) {
-					isRouterVisible = false;
-					router.style.top = `-${blockHeight}px`;
-				} else {
-					isRouterVisible = true;
-					router.style.top = `60px`;
-				}
-			}
-
-			function initRouter() {
-				isRouterVisible = false;
-
-				const block = document.getElementById('router');
-
-				// hide router above the screen
-				blockHeight = block.offsetHeight;
-				block.style.top = `-${blockHeight}px`;
-
-				// mark current page
-				Array.from(block.children).forEach((element) => {
-					const span = element.children.item(0);
-
-					if (!span) return;
-
-					const i = span.innerText.lastIndexOf('.');
-
-					if (!i) return;
-
-					const path = span.innerText.slice(0, i);
-
-					if (window.location.pathname === '/' + path) {
-						element.style.fontWeight = 'bold';
-					}
-				});
-			}
-
-			window.addEventListener('load', initRouter);
-		</script>
-		<style></style>
-		<button id="router-manager" onclick="manager_click()">Router</button>
+		<button id="router-manager">Router</button>
 		<div id="router">
 			<!--router-->
 		</div>
