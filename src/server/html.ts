@@ -75,7 +75,7 @@ export class HtmlRenderer {
 		let r: string = '';
 
 		this.router.routes.forEach((v, k) => {
-			r += `<div class="router-link"><span>${v.file}:</span><a href="/${k}">${v.title || 'title not found'}</a></div>`;
+			r += `<div class="router-link"><span>${v.file}:</span><a href="${k}">${v.title || 'title not found'}</a></div>`;
 		});
 
 		return r;
