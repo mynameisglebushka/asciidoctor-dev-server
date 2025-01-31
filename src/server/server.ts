@@ -17,7 +17,6 @@ export class DevServer {
 		}
 	>;
 
-	private base = '/';
 	private serverPort: number;
 
 	private asciidoctor: AdocRenderer;
@@ -71,9 +70,7 @@ export class DevServer {
 	private handleHome = (): Middleware => {
 		return (next: HandlerFunc): HandlerFunc => {
 			return (req, res) => {
-				let url = req.url || '';
-
-				url = url.replace(this.base, '');
+				const url = req.url;
 
 				if (!url) {
 					res.writeHead(200, { 'content-type': 'text/html' }).end(
@@ -89,9 +86,7 @@ export class DevServer {
 
 	private handleRender: HandlerFunc = (req, res) => {
 		try {
-			let url = req.url || '';
-
-			url = url.replace(this.base, '');
+			const url = req.url || '/';
 
 			const path = this.router.getFilePath(url);
 			if (!path) {

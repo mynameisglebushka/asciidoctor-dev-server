@@ -24,27 +24,14 @@ export class Router {
 				if (err) console.log(err);
 				else {
 					files.forEach((_file) => {
-						const ok = this.checkFile(_file);
-
-						if (!ok) return;
-
-						const { route, file } = ok;
-
-						const title = this.getTitle(_file);
-
-						if (!this._routes.has(route)) {
-							this._routes.set(route, {
-								file: file,
-								title: title,
-							});
-						}
+						this.insertRoute(_file);
 					});
 				}
 			},
 		);
 	}
 
-	insertRoute(filePath: string): void {
+	insertRoute(filePath: string) {
 		const ok = this.checkFile(filePath);
 
 		if (!ok) return;
@@ -59,16 +46,22 @@ export class Router {
 				title: title,
 			});
 		}
+
+		return {
+			route: route,
+			file: file,
+			title: title,
+		};
 	}
 
-	removeRoute(removedFile: string): void {
+	removeRoute(removedFile: string): boolean {
 		const ok = this.checkFile(removedFile);
 
-		if (!ok) return;
+		if (!ok) return false;
 
 		const { route } = ok;
 
-		this._routes.delete(route);
+		return this._routes.delete(route);
 	}
 
 	getFilePath(url: string): string | undefined {
@@ -79,6 +72,25 @@ export class Router {
 		return r.file;
 	}
 
+	getRouteByFilePath(
+		file: string,
+	): { route: string; file: string } | undefined {
+		let r: { route: string; file: string } | undefined = undefined;
+
+		this._routes.forEach((v, k) => {
+			if (r) return;
+
+			if (v.file === file) {
+				r = {
+					route: k,
+					file: v.file,
+				};
+			}
+		});
+
+		return r;
+	}
+
 	private checkFile(path: string) {
 		if (/(^|[/\\])\../.test(path) || path.includes('node_modules')) return;
 
@@ -87,7 +99,7 @@ export class Router {
 		if (pp.ext !== '.adoc') return;
 
 		return {
-			route: join(pp.dir, pp.name),
+			route: '/' + join(pp.dir, pp.name),
 			file: join(pp.dir, pp.base),
 		};
 	}
