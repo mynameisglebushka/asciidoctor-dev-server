@@ -1,4 +1,4 @@
-import { initRouter, manager_click } from './render-router';
+import { initRouter, makeRouterVisible } from './render-router';
 import { startWebSoket } from './websoket';
 
 declare const __PORT__: string;
@@ -13,7 +13,7 @@ window.addEventListener('load', () => {
 	if (btn) {
 		initRouter();
 		btn.addEventListener('click', () => {
-			manager_click();
+			makeRouterVisible();
 		});
 	}
 });

@@ -3,7 +3,7 @@ export let routerOnPage: boolean;
 let isRouterVisible: boolean;
 let blockHeight: number;
 
-export const manager_click = () => {
+export const makeRouterVisible = () => {
 	const router = document.getElementById('router');
 
 	if (!router) return;
@@ -50,4 +50,13 @@ export const initRouter = () => {
 			}
 		}
 	});
+};
+
+export const updateRouter = () => {
+	const block = document.getElementById('router');
+
+	if (!block) return;
+
+	const blockHeight = block.offsetHeight;
+	block.style.top = `-${blockHeight}px`; // Обновляем начальное положение
 };
