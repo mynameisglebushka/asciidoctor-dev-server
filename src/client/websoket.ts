@@ -1,4 +1,10 @@
-import { WebSocketEvent } from '../shared/types/websocket-event';
+import {
+	FileAddEvent,
+	FileChangeEvent,
+	FileRemovedEvent,
+	WebSocketEvent,
+} from '../shared/types/websocket-event';
+import { routerOnPage } from './render-router';
 
 export const startWebSoket = (port: string) => {
 	const ws = new WebSocket(`ws://localhost:${port}`);
@@ -12,15 +18,15 @@ export const startWebSoket = (port: string) => {
 
 		switch (messageData.type) {
 			case 'file_added': {
-				onFileAdd(messageData);
+				onFileAdd(messageData as FileAddEvent);
 				break;
 			}
 			case 'file_change': {
-				onFileChange(messageData);
+				onFileChange(messageData as FileChangeEvent);
 				break;
 			}
 			case 'file_remove': {
-				onFileDelete(messageData);
+				onFileDelete(messageData as FileRemovedEvent);
 				break;
 			}
 		}
@@ -33,39 +39,11 @@ export const startWebSoket = (port: string) => {
 	};
 };
 
-const onFileAdd = (event: WebSocketEvent) => {
-	const file = event.data?.file;
+const onFileChange = (event: FileChangeEvent) => {
+	const path = event.data.route;
 
-	if (!file) {
-		console.warn(event);
-	}
-
-	console.log(`File "${file}" is created`);
-};
-
-const onFileChange = (event: WebSocketEvent) => {
-	const file = event.data?.file;
-
-	if (!file) {
-		console.log(`File not exist in message ${event.toString()}`);
-		return;
-	}
-
-	const i = file.lastIndexOf('.');
-
-	if (!i) {
-		console.warn('Cannot find file extension');
-		return;
-	}
-
-	const path = file.slice(0, i);
-
-	if (!path) {
-		console.warn(file);
-	}
-
-	if (window.location.pathname.slice(1) !== path) {
-		console.debug(
+	if (window.location.pathname !== path) {
+		console.log(
 			`current page "${window.location.pathname}" not affected by "${path}" file change`,
 		);
 		return;
@@ -75,12 +53,81 @@ const onFileChange = (event: WebSocketEvent) => {
 	window.location.reload();
 };
 
-const onFileDelete = (event: WebSocketEvent) => {
-	const file = event.data?.file;
+const onFileAdd = (event: FileAddEvent) => {
+	const { route, file, title } = event.data;
 
-	if (!file) {
-		console.warn(event);
-	}
+	console.log(`File "${file}" is created`);
+
+	const router = findRouterDiv();
+
+	if (!router) return;
+
+	let iAmDoneHere: boolean = false;
+
+	Array.from(router.children).forEach((routerLink) => {
+		if (iAmDoneHere) return;
+
+		if (routerLink! instanceof HTMLDivElement) {
+			const link = routerLink.children.item(1) as HTMLAnchorElement;
+
+			const url = new URL(link.href);
+
+			if (route < url.pathname) {
+				const newRL = document.createElement('div');
+				newRL.classList.add('router-link');
+
+				const newS = document.createElement('span');
+				newS.innerText = file;
+
+				const newA = document.createElement('a');
+				newA.href = route;
+				newA.innerText = title || 'title not found';
+
+				newRL.append(newS, newA);
+
+				router.insertBefore(newRL, routerLink);
+
+				iAmDoneHere = true;
+			}
+		}
+	});
+};
+
+// <div class="router-link"><span>${v.file}:</span><a href="/${k}">${v.title || 'title not found'}</a></div>
+
+const onFileDelete = (event: FileRemovedEvent) => {
+	const file = event.data.file;
 
 	console.log(`File "${file}" is removed`);
+
+	const router = findRouterDiv();
+
+	if (!router) return;
+
+	let iAmDoneHere: boolean = false;
+
+	Array.from(router.children).forEach((routerLink) => {
+		if (iAmDoneHere) return;
+
+		if (routerLink! instanceof HTMLDivElement) {
+			const span = routerLink.children.item(0) as HTMLSpanElement;
+
+			if (span.innerText === file) {
+				routerLink.remove();
+				iAmDoneHere = true;
+			}
+		}
+	});
+};
+
+const findRouterDiv = (): HTMLDivElement | undefined => {
+	let div: HTMLDivElement | undefined;
+
+	if (routerOnPage) {
+		div = document.getElementById('router') as HTMLDivElement;
+	} else {
+		div = document.getElementById('main-router') as HTMLDivElement;
+	}
+
+	return div;
 };

@@ -1,9 +1,5 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import { DevServer } from './server.js';
-import {
-	socketEvent,
-	WebSocketEvent,
-} from '../shared/types/websocket-event.js';
 
 export class WSServer {
 	private wss: WebSocketServer;
@@ -22,11 +18,11 @@ export class WSServer {
 		});
 	};
 
-	sendEventToAllConnectedClients(event: WebSocketEvent): void {
+	sendEventToAllConnectedClients(event: string): void {
 		this.wss.clients.forEach((client) => {
 			if (client.readyState !== WebSocket.OPEN) return;
 
-			client.send(socketEvent(event));
+			client.send(event);
 		});
 	}
 }
