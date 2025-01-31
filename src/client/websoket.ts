@@ -4,7 +4,7 @@ import {
 	FileRemovedEvent,
 	WebSocketEvent,
 } from '../shared/types/websocket-event';
-import { routerOnPage } from './render-router';
+import { routerOnPage, updateRouter } from './render-router';
 
 export const startWebSoket = (port: string) => {
 	const ws = new WebSocket(`ws://localhost:${port}`);
@@ -84,8 +84,8 @@ const onFileAdd = (event: FileAddEvent) => {
 				newA.innerText = title || 'title not found';
 
 				newRL.append(newS, newA);
-
 				router.insertBefore(newRL, routerLink);
+				updateRouter();
 
 				iAmDoneHere = true;
 			}
@@ -114,6 +114,7 @@ const onFileDelete = (event: FileRemovedEvent) => {
 
 			if (span.innerText === file) {
 				routerLink.remove();
+				updateRouter();
 				iAmDoneHere = true;
 			}
 		}

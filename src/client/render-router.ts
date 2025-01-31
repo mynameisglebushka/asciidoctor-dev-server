@@ -1,3 +1,4 @@
+// Means this is on render page, but not on Main or 404
 export let routerOnPage: boolean;
 
 let isRouterVisible: boolean;
@@ -57,6 +58,9 @@ export const updateRouter = () => {
 
 	if (!block) return;
 
-	const blockHeight = block.offsetHeight;
-	block.style.top = `-${blockHeight}px`; // Обновляем начальное положение
+	blockHeight = block.offsetHeight;
+
+	if (!isRouterVisible) {
+		block.style.top = `-${blockHeight}px`;
+	}
 };
