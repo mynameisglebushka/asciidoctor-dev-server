@@ -6,7 +6,7 @@ body {
 	align-items: center;
 }
 
-#main-router {
+#navigation {
 	display: flex;
 	flex-direction: column;
 	border: 1px solid black;
@@ -14,7 +14,7 @@ body {
 	padding: 10px;
 }
 
-.router-link {
+.navigation-link {
 	display: flex;
 	justify-content: space-between;
 	gap: 10px;

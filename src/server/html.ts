@@ -47,7 +47,7 @@ export class HtmlRenderer {
 
 		return this.homeTemplate
 			.replace(`<!--app-html-->`, result)
-			.replace('<!--router-->', this.buildRoutes());
+			.replace('<!--navigation-->', this.buildNavigationLinks());
 	}
 
 	public notFound(url: string): string {
@@ -55,7 +55,7 @@ export class HtmlRenderer {
 
 		return this.notFoundTemplate
 			.replace(`<!--app-html-->`, result)
-			.replace('<!--router-->', this.buildRoutes());
+			.replace('<!--navigation-->', this.buildNavigationLinks());
 	}
 
 	public render(asciidocHtml: string): string {
@@ -65,17 +65,17 @@ export class HtmlRenderer {
 
 		return this.renderedTemplate
 			.replace(`<!--app-head-->`, html.window.document.head.innerHTML)
-			.replace('<!--router-->', this.buildRoutes())
+			.replace('<!--navigation-->', this.buildNavigationLinks())
 			.replace(`<!--app-html-->`, html.window.document.body.innerHTML);
 	}
 
 	public plain() {}
 
-	private buildRoutes(): string {
+	private buildNavigationLinks(): string {
 		let r: string = '';
 
 		this.router.routes.forEach((v, k) => {
-			r += `<div class="router-link"><span>${v.file}:</span><a href="${k}">${v.title || 'title not found'}</a></div>`;
+			r += `<div class="navigation-link"><span>${v.file}:</span><a href="${k}">${v.title || 'title not found'}</a></div>`;
 		});
 
 		return r;

@@ -1,4 +1,4 @@
-import { initRouter, makeRouterVisible } from './render-router';
+import { initNavbar, makeNavbarVisible } from './render-navbar';
 import { startWebSoket } from './websoket';
 
 declare const __PORT__: string;
@@ -8,12 +8,14 @@ const port = __PORT__;
 startWebSoket(port);
 
 window.addEventListener('load', () => {
-	const btn = document.getElementById('router-manager') as HTMLButtonElement;
+	const btn = document.getElementById(
+		'navigation-manager',
+	) as HTMLButtonElement;
 
 	if (btn) {
-		initRouter();
+		initNavbar();
 		btn.addEventListener('click', () => {
-			makeRouterVisible();
+			makeNavbarVisible();
 		});
 	}
 });

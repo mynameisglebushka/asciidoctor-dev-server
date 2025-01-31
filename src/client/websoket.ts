@@ -4,7 +4,7 @@ import {
 	FileRemovedEvent,
 	WebSocketEvent,
 } from '../shared/types/websocket-event';
-import { routerOnPage, updateRouter } from './render-router';
+import { isNavbarPage, updateNavbar } from './render-navbar';
 
 export const startWebSoket = (port: string) => {
 	const ws = new WebSocket(`ws://localhost:${port}`);
@@ -40,11 +40,11 @@ export const startWebSoket = (port: string) => {
 };
 
 const onFileChange = (event: FileChangeEvent) => {
-	const path = event.data.route;
+	const route = event.data.route;
 
-	if (window.location.pathname !== path) {
+	if (window.location.pathname !== route) {
 		console.log(
-			`current page "${window.location.pathname}" not affected by "${path}" file change`,
+			`current page "${window.location.pathname}" not affected by "${route}" file change`,
 		);
 		return;
 	}
@@ -58,23 +58,23 @@ const onFileAdd = (event: FileAddEvent) => {
 
 	console.log(`File "${file}" is created`);
 
-	const router = findRouterDiv();
+	const nav = findNavigationDiv();
 
-	if (!router) return;
+	if (!nav) return;
 
 	let iAmDoneHere: boolean = false;
 
-	Array.from(router.children).forEach((routerLink) => {
+	Array.from(nav.children).forEach((navLink) => {
 		if (iAmDoneHere) return;
 
-		if (routerLink! instanceof HTMLDivElement) {
-			const link = routerLink.children.item(1) as HTMLAnchorElement;
+		if (navLink! instanceof HTMLDivElement) {
+			const link = navLink.children.item(1) as HTMLAnchorElement;
 
 			const url = new URL(link.href);
 
 			if (route < url.pathname) {
-				const newRL = document.createElement('div');
-				newRL.classList.add('router-link');
+				const newNL = document.createElement('div');
+				newNL.classList.add('navigation-link');
 
 				const newS = document.createElement('span');
 				newS.innerText = file;
@@ -83,9 +83,9 @@ const onFileAdd = (event: FileAddEvent) => {
 				newA.href = route;
 				newA.innerText = title || 'title not found';
 
-				newRL.append(newS, newA);
-				router.insertBefore(newRL, routerLink);
-				updateRouter();
+				newNL.append(newS, newA);
+				nav.insertBefore(newNL, navLink);
+				updateNavbar();
 
 				iAmDoneHere = true;
 			}
@@ -93,41 +93,41 @@ const onFileAdd = (event: FileAddEvent) => {
 	});
 };
 
-// <div class="router-link"><span>${v.file}:</span><a href="/${k}">${v.title || 'title not found'}</a></div>
+// <div class="navigation-link"><span>${v.file}:</span><a href="/${k}">${v.title || 'title not found'}</a></div>
 
 const onFileDelete = (event: FileRemovedEvent) => {
 	const file = event.data.file;
 
 	console.log(`File "${file}" is removed`);
 
-	const router = findRouterDiv();
+	const nav = findNavigationDiv();
 
-	if (!router) return;
+	if (!nav) return;
 
 	let iAmDoneHere: boolean = false;
 
-	Array.from(router.children).forEach((routerLink) => {
+	Array.from(nav.children).forEach((navLink) => {
 		if (iAmDoneHere) return;
 
-		if (routerLink! instanceof HTMLDivElement) {
-			const span = routerLink.children.item(0) as HTMLSpanElement;
+		if (navLink! instanceof HTMLDivElement) {
+			const span = navLink.children.item(0) as HTMLSpanElement;
 
 			if (span.innerText === file) {
-				routerLink.remove();
-				updateRouter();
+				navLink.remove();
+				updateNavbar();
 				iAmDoneHere = true;
 			}
 		}
 	});
 };
 
-const findRouterDiv = (): HTMLDivElement | undefined => {
+const findNavigationDiv = (): HTMLDivElement | undefined => {
 	let div: HTMLDivElement | undefined;
 
-	if (routerOnPage) {
-		div = document.getElementById('router') as HTMLDivElement;
+	if (isNavbarPage) {
+		div = document.getElementById('navbar') as HTMLDivElement;
 	} else {
-		div = document.getElementById('main-router') as HTMLDivElement;
+		div = document.getElementById('navigation') as HTMLDivElement;
 	}
 
 	return div;
