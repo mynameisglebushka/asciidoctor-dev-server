@@ -1,5 +1,5 @@
-import Processor from 'asciidoctor';
-import type { Asciidoctor } from 'asciidoctor';
+import Processor from '@asciidoctor/core';
+import type { Asciidoctor } from '@asciidoctor/core';
 
 export class AdocRenderer {
 	private asciidoc: Asciidoctor;
@@ -13,6 +13,11 @@ export class AdocRenderer {
 			standalone: true,
 			to_file: false,
 			safe: 'safe',
+			attributes: {
+				stylesdir: '/public',
+				stylesheet: '@render-styles',
+				linkcss: true,
+			},
 		});
 
 		let result: string;

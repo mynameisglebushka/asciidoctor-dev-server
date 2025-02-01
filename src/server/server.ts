@@ -29,7 +29,7 @@ export class DevServer {
 		return this._server;
 	}
 
-	private handleStaticFile = (): Middleware => {
+	private presetStaticFiles = (): Middleware => {
 		return (next: HandlerFunc): HandlerFunc => {
 			return (req, res) => {
 				if (req.url === undefined) {
@@ -62,6 +62,19 @@ export class DevServer {
 					}).end(content);
 				} else {
 					next(req, res);
+				}
+			};
+		};
+	};
+
+	private anotherStaticFiles = (): Middleware => {
+		return (next: HandlerFunc): HandlerFunc => {
+			return (req, res) => {
+				const url = req.url;
+
+				if (!url) {
+					next(req, res);
+					return;
 				}
 			};
 		};
@@ -156,9 +169,20 @@ export class DevServer {
 					'../../public/asciidoctor-dev-self-page.css',
 				),
 				contentType: 'text/css',
+			})
+			.set(/@render-styles/, {
+				path: resolve(opts.sd, '../../public/render-styles.css'),
+				contentType: 'text/css',
+			})
+			.set(/@asciidoctor.css/, {
+				path: resolve(
+					opts.sd,
+					'../../node_modules/@asciidoctor/core/dist/css/asciidoctor.css',
+				),
+				contentType: 'text/css',
 			});
 
-		const chain = this.chain(this.handleStaticFile(), this.handleHome());
+		const chain = this.chain(this.presetStaticFiles(), this.handleHome());
 
 		this._server = new Server(chain(this.handleRender));
 	}
