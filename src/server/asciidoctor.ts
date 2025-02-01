@@ -1,11 +1,16 @@
 import Processor from '@asciidoctor/core';
-import type { Asciidoctor } from '@asciidoctor/core';
+import type { Asciidoctor, Extensions } from '@asciidoctor/core';
+import Kroki from 'asciidoctor-kroki';
 
 export class AdocRenderer {
 	private asciidoc: Asciidoctor;
+	private register: Extensions.Registry;
 
 	constructor() {
 		this.asciidoc = Processor();
+		this.register = this.asciidoc.Extensions.create();
+
+		Kroki.register(this.register);
 	}
 
 	convert(filePath: string) {
@@ -13,6 +18,7 @@ export class AdocRenderer {
 			standalone: true,
 			to_file: false,
 			safe: 'safe',
+			extension_registry: this.register,
 			attributes: {
 				stylesdir: '/public',
 				stylesheet: '@render-styles',
