@@ -29,7 +29,20 @@ export class DevServer {
 		return this._server;
 	}
 
-	private presetStaticFiles = (): Middleware => {
+	private health = (): Middleware => {
+		return (next: HandlerFunc): HandlerFunc => {
+			return (req, res) => {
+				if (req.url === '/ads-health') {
+					res.writeHead(200).end();
+					return;
+				}
+
+				next(req, res);
+			};
+		};
+	};
+
+	private reservedStatic = (): Middleware => {
 		return (next: HandlerFunc): HandlerFunc => {
 			return (req, res) => {
 				if (req.url === undefined) {
@@ -80,7 +93,7 @@ export class DevServer {
 		};
 	};
 
-	private handleHome = (): Middleware => {
+	private home = (): Middleware => {
 		return (next: HandlerFunc): HandlerFunc => {
 			return (req, res) => {
 				const url = req.url;
@@ -182,7 +195,11 @@ export class DevServer {
 				contentType: 'text/css',
 			});
 
-		const chain = this.chain(this.presetStaticFiles(), this.handleHome());
+		const chain = this.chain(
+			this.health(),
+			this.reservedStatic(),
+			this.home(),
+		);
 
 		this._server = new Server(chain(this.handleRender));
 	}

@@ -36,6 +36,7 @@ export const startWebSoket = (port: string) => {
 
 	ws.onclose = () => {
 		console.log('Connection closed');
+		pollingServer();
 	};
 };
 
@@ -131,4 +132,30 @@ const findNavigationDiv = (): HTMLDivElement | undefined => {
 	}
 
 	return div;
+};
+
+const pollingServer = () => {
+	const port = window.location.port;
+	let pollingInterval = 1000;
+
+	const poll = () => {
+		fetch('/ads-health')
+			.then((res) => {
+				if (res.ok) {
+					console.log('server up, reconnect');
+					startWebSoket(port);
+				} else {
+					console.log('server down, continue');
+					setTimeout(poll, pollingInterval);
+					pollingInterval = Math.min(pollingInterval * 2, 60000);
+				}
+			})
+			.catch((err) => {
+				console.log('error: ' + err + ', continue');
+				setTimeout(poll, pollingInterval);
+				pollingInterval = Math.min(pollingInterval * 2, 60000);
+			});
+	};
+
+	poll();
 };
