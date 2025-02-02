@@ -1,36 +1,40 @@
 import Processor from '@asciidoctor/core';
-import type { Asciidoctor } from '@asciidoctor/core';
 import Kroki from 'asciidoctor-kroki';
 
-export class AdocRenderer {
-	private asciidoc: Asciidoctor;
+export interface AsciidoctorProcessor {
+	convert(filePath: string): string;
+}
 
-	constructor() {
-		this.asciidoc = Processor();
+// interface AsciidoctorProcessorOptions {}
 
-		Kroki.register(this.asciidoc.Extensions);
-	}
+export function createProcessor(): AsciidoctorProcessor {
+	const asciidoctor = Processor();
+	Kroki.register(asciidoctor.Extensions);
 
-	convert(filePath: string) {
-		const convertedDocument = this.asciidoc.convertFile(filePath, {
-			standalone: true,
-			to_file: false,
-			safe: 'safe',
-			attributes: {
-				stylesdir: '/public',
-				stylesheet: '@render-styles',
-				linkcss: true,
-			},
-		});
+	const processor: AsciidoctorProcessor = {
+		convert(filePath) {
+			const convertedDocument = asciidoctor.convertFile(filePath, {
+				standalone: true,
+				to_file: false,
+				safe: 'safe',
+				attributes: {
+					stylesdir: '/public',
+					stylesheet: '@render-styles',
+					linkcss: true,
+				},
+			});
 
-		let result: string;
+			let result: string;
 
-		if (typeof convertedDocument === 'string') {
-			result = convertedDocument;
-		} else {
-			result = convertedDocument.convert();
-		}
+			if (typeof convertedDocument === 'string') {
+				result = convertedDocument;
+			} else {
+				result = convertedDocument.convert();
+			}
 
-		return result;
-	}
+			return result;
+		},
+	};
+
+	return processor;
 }

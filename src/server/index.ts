@@ -1,5 +1,5 @@
 import { AsciiDoctorDevServerOptions } from './types/server-options.js';
-import { AdocRenderer } from './asciidoctor.js';
+import { createProcessor } from './asciidoctor.js';
 import { HtmlRenderer } from './html.js';
 import { Router } from './router.js';
 import { Watcher } from './watcher.js';
@@ -16,7 +16,7 @@ const sd = dirname(fileURLToPath(import.meta.url)); // script directory
 
 export function createDevServer(options?: AsciiDoctorDevServerOptions) {
 	const router = new Router(cwd);
-	const asciidoctor = new AdocRenderer();
+	const asciidoctor = createProcessor();
 	const html = new HtmlRenderer(router, sd);
 
 	const serverPort = options?.server?.port || httpPort;
