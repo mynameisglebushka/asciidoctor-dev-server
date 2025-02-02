@@ -1,7 +1,7 @@
 import { Server, createServer as createHttp } from 'node:http';
 
 import { AsciidoctorProcessor } from './asciidoctor.js';
-import { HtmlRenderer } from './html.js';
+import { _HtmlRenderer } from './html.js';
 import { Router } from './router.js';
 import { HandlerFunc } from './types/routing.js';
 import { resolve } from 'node:path';
@@ -15,7 +15,7 @@ export interface _DevServer {
 interface DevServerOptions {
 	settings: { port: number; sd: string };
 	asciidoctor: AsciidoctorProcessor;
-	html: HtmlRenderer;
+	html: _HtmlRenderer;
 	router: Router;
 }
 

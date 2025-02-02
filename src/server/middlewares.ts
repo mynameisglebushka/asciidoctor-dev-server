@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { HandlerFunc, Middleware } from './types/routing';
-import { HtmlRenderer } from './html';
+import { HandlerFunc, Middleware } from './types/routing.js';
+import { _HtmlRenderer } from './html.js';
 
 export const health = (): Middleware => {
 	return (next: HandlerFunc): HandlerFunc => {
@@ -62,7 +62,7 @@ export const reservedStatic = (staticFiles: StaticFiles): Middleware => {
 	};
 };
 
-export const home = (html: HtmlRenderer): Middleware => {
+export const home = (html: _HtmlRenderer): Middleware => {
 	return (next: HandlerFunc): HandlerFunc => {
 		return (req, res) => {
 			const url = req.url;
