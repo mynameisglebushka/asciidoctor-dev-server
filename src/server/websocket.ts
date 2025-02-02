@@ -1,28 +1,36 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import { _DevServer } from './server.js';
 
-export class WSServer {
-	private wss: WebSocketServer;
+export interface WSServer {
+	sendEventToAllConnectedClients(event: string): void;
+}
 
-	constructor(server: _DevServer) {
-		this.wss = new WebSocketServer({ server: server.server });
+interface WSServerOptions {
+	httpServer: _DevServer;
+}
 
-		this.wss.on('connection', this.connectionHandler);
-	}
+export function createWSServer(opts: WSServerOptions): WSServer {
+	const _wss = new WebSocketServer({ server: opts.httpServer.server });
 
-	private connectionHandler = (s: WebSocket) => {
-		s.on('error', console.error);
+	_wss.on('connection', connectionHandler);
 
-		s.on('message', function message(data) {
-			console.log('received: %s', data);
-		});
+	const wss: WSServer = {
+		sendEventToAllConnectedClients(event) {
+			_wss.clients.forEach((client) => {
+				if (client.readyState !== WebSocket.OPEN) return;
+
+				client.send(event);
+			});
+		},
 	};
 
-	sendEventToAllConnectedClients(event: string): void {
-		this.wss.clients.forEach((client) => {
-			if (client.readyState !== WebSocket.OPEN) return;
-
-			client.send(event);
-		});
-	}
+	return wss;
 }
+
+const connectionHandler = (s: WebSocket) => {
+	s.on('error', console.error);
+
+	s.on('message', function message(data) {
+		console.log('received: %s', data);
+	});
+};

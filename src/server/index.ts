@@ -4,7 +4,7 @@ import { HtmlRenderer } from './html.js';
 import { Router } from './router.js';
 import { Watcher } from './watcher.js';
 import { createServer } from './server.js';
-import { WSServer } from './websocket.js';
+import { createWSServer } from './websocket.js';
 
 import { cursorTo, clearScreenDown } from 'node:readline';
 import { fileURLToPath } from 'node:url';
@@ -31,7 +31,7 @@ export function createDevServer(options?: AsciiDoctorDevServerOptions) {
 		router,
 	});
 
-	const wss = new WSServer(devServer);
+	const wss = createWSServer({ httpServer: devServer });
 
 	new Watcher(cwd, router, wss);
 
