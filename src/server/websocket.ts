@@ -1,10 +1,10 @@
 import { WebSocket, WebSocketServer } from 'ws';
-import { DevServer } from './server.js';
+import { _DevServer } from './server.js';
 
 export class WSServer {
 	private wss: WebSocketServer;
 
-	constructor(server: DevServer) {
+	constructor(server: _DevServer) {
 		this.wss = new WebSocketServer({ server: server.server });
 
 		this.wss.on('connection', this.connectionHandler);

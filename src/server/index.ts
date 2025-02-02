@@ -3,7 +3,7 @@ import { AdocRenderer } from './asciidoctor.js';
 import { HtmlRenderer } from './html.js';
 import { Router } from './router.js';
 import { Watcher } from './watcher.js';
-import { DevServer } from './server.js';
+import { createServer } from './server.js';
 import { WSServer } from './websocket.js';
 
 import { cursorTo, clearScreenDown } from 'node:readline';
@@ -21,12 +21,16 @@ export function createDevServer(options?: AsciiDoctorDevServerOptions) {
 
 	const serverPort = options?.server?.port || httpPort;
 
-	const devServer = new DevServer(
-		{ port: serverPort, sd: sd },
+	const devServer = createServer({
+		settings: {
+			port: serverPort,
+			sd: sd,
+		},
 		asciidoctor,
 		html,
 		router,
-	);
+	});
+
 	const wss = new WSServer(devServer);
 
 	new Watcher(cwd, router, wss);
