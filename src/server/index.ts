@@ -2,7 +2,7 @@ import { AsciiDoctorDevServerOptions } from './types/server-options.js';
 import { createProcessor } from './asciidoctor.js';
 import { createHtmlRenderer } from './html.js';
 import { createRouter } from './router.js';
-import { Watcher } from './watcher.js';
+import { startWatcher } from './watcher.js';
 import { createServer } from './server.js';
 import { createWSServer } from './websocket.js';
 
@@ -35,7 +35,7 @@ export function createDevServer(options?: AsciiDoctorDevServerOptions) {
 
 	const wss = createWSServer({ httpServer: devServer });
 
-	new Watcher(cwd, router, wss);
+	startWatcher({ cwd, router, wss });
 
 	devServer.listen(() => {
 		clearScreen();

@@ -3,7 +3,7 @@ import { JSDOM } from 'jsdom';
 import { Router } from './router';
 import { resolve } from 'node:path';
 
-export interface _HtmlRenderer {
+export interface HtmlRenderer {
 	home(): string;
 	notFound(url: string): string;
 	render(html: string): string;
@@ -14,7 +14,7 @@ interface HtmlRendererOptions {
 	sd: string;
 }
 
-export function createHtmlRenderer(opts: HtmlRendererOptions): _HtmlRenderer {
+export function createHtmlRenderer(opts: HtmlRendererOptions): HtmlRenderer {
 	const router = opts.router;
 	const scriptDir = opts.sd;
 
@@ -39,7 +39,7 @@ export function createHtmlRenderer(opts: HtmlRendererOptions): _HtmlRenderer {
 
 	const builder = routerBuilder(router);
 
-	const html: _HtmlRenderer = {
+	const html: HtmlRenderer = {
 		home(): string {
 			const result: string = '';
 
@@ -86,82 +86,3 @@ const routerBuilder = (router: Router) => {
 		return r;
 	};
 };
-
-// export class HtmlRenderer {
-// 	private router: Router;
-// 	private homeTemplate: string;
-// 	private notFoundTemplate: string;
-// 	private renderedTemplate: string;
-// 	private plainTemplate: string;
-
-// 	constructor(router: Router, sd: string) {
-// 		this.router = router;
-
-// 		this.homeTemplate = readFileSync(
-// 			resolve(sd, '../../public/home_page.html'),
-// 			{
-// 				encoding: 'utf-8',
-// 			},
-// 		);
-
-// 		this.notFoundTemplate = readFileSync(
-// 			resolve(sd, '../../public/notfound_page.html'),
-// 			{
-// 				encoding: 'utf-8',
-// 			},
-// 		);
-
-// 		this.renderedTemplate = readFileSync(
-// 			resolve(sd, '../../public/rendered_page.html'),
-// 			{
-// 				encoding: 'utf-8',
-// 			},
-// 		);
-
-// 		this.plainTemplate = readFileSync(
-// 			resolve(sd, '../../public/plain_page.html'),
-// 			{
-// 				encoding: 'utf-8',
-// 			},
-// 		);
-// 	}
-
-// 	public home(): string {
-// 		const result: string = '';
-
-// 		return this.homeTemplate
-// 			.replace(`<!--app-html-->`, result)
-// 			.replace('<!--navigation-->', this.buildNavigationLinks());
-// 	}
-
-// 	public notFound(url: string): string {
-// 		const result: string = `<h1>Nothing was found on the ${url || '/'}</h1>`;
-
-// 		return this.notFoundTemplate
-// 			.replace(`<!--app-html-->`, result)
-// 			.replace('<!--navigation-->', this.buildNavigationLinks());
-// 	}
-
-// 	public render(asciidocHtml: string): string {
-// 		const html = new JSDOM(asciidocHtml, {
-// 			contentType: 'text/html',
-// 		});
-
-// 		return this.renderedTemplate
-// 			.replace(`<!--app-head-->`, html.window.document.head.innerHTML)
-// 			.replace('<!--navigation-->', this.buildNavigationLinks())
-// 			.replace(`<!--app-html-->`, html.window.document.body.innerHTML);
-// 	}
-
-// 	public plain() {}
-
-// 	private buildNavigationLinks(): string {
-// 		let r: string = '';
-
-// 		this.router.routes.forEach((v, k) => {
-// 			r += `<div class="navigation-link"><span>${v.file}:</span><a href="${k}">${v.title || 'title not found'}</a></div>`;
-// 		});
-
-// 		return r;
-// 	}
-// }

@@ -1,12 +1,12 @@
 import { WebSocket, WebSocketServer } from 'ws';
-import { _DevServer } from './server.js';
+import { DevServer } from './server.js';
 
 export interface WSServer {
 	sendEventToAllConnectedClients(event: string): void;
 }
 
 interface WSServerOptions {
-	httpServer: _DevServer;
+	httpServer: DevServer;
 }
 
 export function createWSServer(opts: WSServerOptions): WSServer {

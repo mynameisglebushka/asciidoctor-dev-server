@@ -1,13 +1,13 @@
 import { Server, createServer as createHttp } from 'node:http';
 
 import { AsciidoctorProcessor } from './asciidoctor.js';
-import { _HtmlRenderer } from './html.js';
+import { HtmlRenderer } from './html.js';
 import { Router } from './router.js';
 import { HandlerFunc } from './types/routing.js';
 import { resolve } from 'node:path';
 import { chain, health, home, reservedStatic } from './middlewares.js';
 
-export interface _DevServer {
+export interface DevServer {
 	server: Server;
 	listen(cd: () => void): void;
 }
@@ -15,11 +15,11 @@ export interface _DevServer {
 interface DevServerOptions {
 	settings: { port: number; sd: string };
 	asciidoctor: AsciidoctorProcessor;
-	html: _HtmlRenderer;
+	html: HtmlRenderer;
 	router: Router;
 }
 
-export function createServer(opts: DevServerOptions): _DevServer {
+export function createServer(opts: DevServerOptions): DevServer {
 	const port = opts.settings.port;
 	const scriptDir = opts.settings.sd;
 	const asciidoctorProcessor = opts.asciidoctor;
@@ -92,7 +92,7 @@ export function createServer(opts: DevServerOptions): _DevServer {
 
 	const _server = createHttp(middlewares(handler));
 
-	const server: _DevServer = {
+	const server: DevServer = {
 		listen(cb: () => void) {
 			_server.listen(port, cb);
 		},
