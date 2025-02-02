@@ -1,122 +1,124 @@
 import { readdir, readFileSync } from 'node:fs';
 import { parse, join } from 'node:path';
 
-export class Router {
-	private readonly cwd: string;
-	private readonly _routes: Map<string, { title: string; file: string }>;
+interface Route {
+	route: string;
+	file: string;
+	title?: string;
+}
 
-	get routes() {
-		return this._routes;
-	}
+export interface Router {
+	readonly routes: Map<string, { title: string; file: string }>;
+	insertRoute(file: string): Route | undefined;
+	removeRouteByFile(file: string): boolean;
+	getFilePath(route: string): string | undefined;
+	getRouteByFilePath(file: string): Route | undefined;
+}
 
-	constructor(cwd: string) {
-		this.cwd = cwd;
-		this._routes = new Map();
+interface RouterOptions {
+	cwd: string;
+}
 
-		this.setupRouter();
-	}
+export function createRouter(opts: RouterOptions): Router {
+	const router: Router = {
+		routes: new Map(),
+		insertRoute(this: Router, _file: string): Route | undefined {
+			const ok = checkFile(_file);
 
-	private setupRouter() {
-		readdir(
-			this.cwd,
-			{ recursive: true, encoding: 'utf-8' },
-			(err, files) => {
-				if (err) console.log(err);
-				else {
-					files.forEach((_file) => {
-						this.insertRoute(_file);
-					});
-				}
-			},
-		);
-	}
+			if (!ok) return;
 
-	insertRoute(filePath: string) {
-		const ok = this.checkFile(filePath);
+			const { route, file } = ok;
 
-		if (!ok) return;
+			const title = getTitle(_file);
 
-		const { route, file } = ok;
+			if (!this.routes.has(route)) {
+				this.routes.set(route, {
+					file: file,
+					title: title,
+				});
+			}
 
-		const title = this.getTitle(filePath);
-
-		if (!this._routes.has(route)) {
-			this._routes.set(route, {
+			return {
+				route: route,
 				file: file,
 				title: title,
+			};
+		},
+
+		removeRouteByFile(this: Router, removedFile: string): boolean {
+			const ok = checkFile(removedFile);
+
+			if (!ok) return false;
+
+			const { route } = ok;
+
+			return this.routes.delete(route);
+		},
+
+		getFilePath(this: Router, url: string): string | undefined {
+			const r = this.routes.get(url);
+
+			if (!r) return;
+
+			return r.file;
+		},
+
+		getRouteByFilePath(this: Router, file: string): Route | undefined {
+			let r: Route | undefined = undefined;
+
+			this.routes.forEach((v, k) => {
+				if (r) return;
+
+				if (v.file === file) {
+					r = {
+						route: k,
+						file: v.file,
+						title: v.title,
+					};
+				}
+			});
+
+			return r;
+		},
+	};
+
+	readdir(opts.cwd, { recursive: true, encoding: 'utf-8' }, (err, files) => {
+		if (err) console.log(err);
+		else {
+			files.forEach((_file) => {
+				router.insertRoute(_file);
 			});
 		}
+	});
 
-		return {
-			route: route,
-			file: file,
-			title: title,
-		};
-	}
-
-	removeRoute(removedFile: string): boolean {
-		const ok = this.checkFile(removedFile);
-
-		if (!ok) return false;
-
-		const { route } = ok;
-
-		return this._routes.delete(route);
-	}
-
-	getFilePath(url: string): string | undefined {
-		const r = this._routes.get(url);
-
-		if (!r) return;
-
-		return r.file;
-	}
-
-	getRouteByFilePath(
-		file: string,
-	): { route: string; file: string } | undefined {
-		let r: { route: string; file: string } | undefined = undefined;
-
-		this._routes.forEach((v, k) => {
-			if (r) return;
-
-			if (v.file === file) {
-				r = {
-					route: k,
-					file: v.file,
-				};
-			}
-		});
-
-		return r;
-	}
-
-	private checkFile(path: string) {
-		if (/(^|[/\\])\../.test(path) || path.includes('node_modules')) return;
-
-		const pp = parse(path);
-
-		if (pp.ext !== '.adoc') return;
-
-		return {
-			route: '/' + join(pp.dir, pp.name),
-			file: join(pp.dir, pp.base),
-		};
-	}
-
-	private getTitle(path: string) {
-		const content = readFileSync(path, {
-			encoding: 'utf-8',
-		});
-
-		const regRes = /^= ([^\n]+)/.exec(content);
-
-		let title: string = '';
-
-		if (regRes && regRes.length === 2) {
-			title = regRes[1];
-		}
-
-		return title;
-	}
+	return router;
 }
+
+const checkFile = (path: string) => {
+	if (/(^|[/\\])\../.test(path) || path.includes('node_modules')) return;
+
+	const pp = parse(path);
+
+	if (pp.ext !== '.adoc') return;
+
+	return {
+		route: '/' + join(pp.dir, pp.name),
+		file: join(pp.dir, pp.base),
+	};
+};
+
+const getTitle = (path: string) => {
+	const content = readFileSync(path, {
+		encoding: 'utf-8',
+	});
+
+	const regRes = /^= ([^\n]+)/.exec(content);
+
+	let title: string = '';
+
+	if (regRes && regRes.length === 2) {
+		title = regRes[1];
+	}
+
+	return title;
+};

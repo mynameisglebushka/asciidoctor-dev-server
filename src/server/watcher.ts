@@ -45,7 +45,7 @@ export class Watcher {
 		});
 
 		this.watcher.on('unlink', (path: string) => {
-			if (!this.router.removeRoute(path)) return;
+			if (!this.router.removeRouteByFile(path)) return;
 
 			this.wss.sendEventToAllConnectedClients(
 				socketEvent<FileRemovedEvent>({

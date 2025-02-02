@@ -1,7 +1,7 @@
 import { AsciiDoctorDevServerOptions } from './types/server-options.js';
 import { createProcessor } from './asciidoctor.js';
 import { createHtmlRenderer } from './html.js';
-import { Router } from './router.js';
+import { createRouter } from './router.js';
 import { Watcher } from './watcher.js';
 import { createServer } from './server.js';
 import { createWSServer } from './websocket.js';
@@ -15,7 +15,9 @@ const cwd = process.cwd(); // current working directory
 const sd = dirname(fileURLToPath(import.meta.url)); // script directory
 
 export function createDevServer(options?: AsciiDoctorDevServerOptions) {
-	const router = new Router(cwd);
+	const router = createRouter({
+		cwd: cwd,
+	});
 	const asciidoctor = createProcessor();
 	const html = createHtmlRenderer({ router: router, sd: sd });
 
