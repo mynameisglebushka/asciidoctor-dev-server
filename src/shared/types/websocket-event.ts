@@ -27,6 +27,6 @@ export interface FileRemovedEvent extends WebSocketEvent {
 	};
 }
 
-export const socketEvent = <T>(event: T): string => {
+export const socketEvent = <T extends WebSocketEvent>(event: T): string => {
 	return JSON.stringify(event);
 };
