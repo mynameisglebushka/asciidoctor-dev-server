@@ -2,19 +2,17 @@ import colors from 'picocolors';
 import { Formatter } from 'picocolors/types';
 
 type LogType = 'info' | 'debug' | 'warn' | 'error';
-type ColorFunc = (fmt: Formatter) => string;
-type LogItem = string | ColorFunc;
 
 export interface Logger {
 	readonly opts: {
 		debug: boolean;
 	};
 	readonly stack: StackItem[];
-	info(...msg: LogItem[]): void;
-	debug(...msg: LogItem[]): void;
-	warn(...msg: LogItem[]): void;
-	error(...msg: LogItem[]): void;
-	with(...vals: LogItem[]): Logger;
+	info(msg: string): void;
+	debug(msg: string): void;
+	warn(msg: string): void;
+	error(msg: string): void;
+	with(val: StackItem): Logger;
 }
 
 interface LoggerOptions {
@@ -25,7 +23,7 @@ interface LogOptions {
 	stack: StackItem[];
 }
 
-type StackItem = LogItem;
+type StackItem = string;
 
 export function createLogger(opts: LoggerOptions) {
 	const prefix = '[ads]';
@@ -35,11 +33,7 @@ export function createLogger(opts: LoggerOptions) {
 		second: 'numeric',
 	});
 
-	const format = (
-		type: LogType,
-		opts?: LogOptions,
-		...msg: LogItem[]
-	): string => {
+	const format = (type: LogType, msg: string, opts?: LogOptions): string => {
 		let colorFunc: Formatter;
 
 		if (type === 'info') {
@@ -58,32 +52,18 @@ export function createLogger(opts: LoggerOptions) {
 			),
 		);
 
-		const _stack: string[] = [];
+		let _stack = '';
 
 		opts?.stack.forEach((item) => {
-			if (typeof item === 'string') {
-				_stack.push(item);
-			} else {
-				_stack.push(item(colorFunc));
-			}
+			_stack += colorFunc(item) + ' ';
 		});
 
-		const _msg: string[] = [];
-
-		msg.forEach((m: string | ColorFunc) => {
-			if (typeof m === 'string') {
-				_msg.push(m);
-			} else {
-				_msg.push(m(colorFunc));
-			}
-		});
-
-		return `${tag} ${_stack ? _stack.join(' ') + ' ' : ''}${_msg.join(' ')}`;
+		return `${tag} ${_stack || ''}${msg}`;
 	};
 
-	const output = (type: LogType, opts?: LogOptions, ...msg: LogItem[]) => {
+	const output = (type: LogType, msg: string, opts?: LogOptions) => {
 		const method = type === 'info' ? 'log' : type;
-		console[method](format(type, opts, ...msg));
+		console[method](format(type, msg, opts));
 	};
 
 	const logger: Logger = {
@@ -91,44 +71,28 @@ export function createLogger(opts: LoggerOptions) {
 			debug: opts.debug,
 		},
 		stack: [],
-		info(this: Logger, ...msg) {
-			output(
-				'info',
-				{
-					stack: this.stack,
-				},
-				...msg,
-			);
+		info(this: Logger, msg) {
+			output('info', msg, {
+				stack: this.stack,
+			});
 		},
-		debug(this: Logger, ...msg) {
+		debug(this: Logger, msg) {
 			if (this.opts.debug)
-				output(
-					'debug',
-					{
-						stack: this.stack,
-					},
-					...msg,
-				);
-		},
-		warn(this: Logger, ...msg) {
-			output(
-				'warn',
-				{
+				output('debug', msg, {
 					stack: this.stack,
-				},
-				...msg,
-			);
+				});
 		},
-		error(this: Logger, ...msg) {
-			output(
-				'error',
-				{
-					stack: this.stack,
-				},
-				...msg,
-			);
+		warn(this: Logger, msg) {
+			output('warn', msg, {
+				stack: this.stack,
+			});
 		},
-		with(this: Logger, ...vals) {
+		error(this: Logger, msg) {
+			output('error', msg, {
+				stack: this.stack,
+			});
+		},
+		with(this: Logger, val) {
 			const c: Logger = {
 				opts: {
 					debug: this.opts.debug,
@@ -141,7 +105,7 @@ export function createLogger(opts: LoggerOptions) {
 				with: this.with,
 			};
 
-			c.stack.push(...vals);
+			c.stack.push(val);
 
 			return c;
 		},
@@ -150,8 +114,10 @@ export function createLogger(opts: LoggerOptions) {
 	return logger;
 }
 
-export const cf = (text: string): ColorFunc => {
-	return (fmt: Formatter) => {
-		return fmt(text);
-	};
-};
+const logger1 = createLogger({ debug: true });
+const logger2 = logger1.with('logger2');
+const logger3 = logger2.with('logger3');
+
+logger1.debug('debil');
+logger2.debug('debil');
+logger3.debug('debil');
