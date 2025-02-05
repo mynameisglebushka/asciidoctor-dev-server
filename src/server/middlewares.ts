@@ -1,6 +1,18 @@
 import { readFileSync } from 'node:fs';
 import { HandlerFunc, Middleware } from './types/routing.js';
 import { HtmlRenderer } from './html.js';
+import { Logger } from './logger.js';
+
+export const logging = (logger: Logger): Middleware => {
+	return (next: HandlerFunc): HandlerFunc => {
+		return (req, res) => {
+			const path = req.url || '/';
+			logger.info(`start request on ${path}`);
+			next(req, res);
+			logger.info(`end request on ${path} with status ${res.statusCode}`);
+		};
+	};
+};
 
 export const health = (): Middleware => {
 	return (next: HandlerFunc): HandlerFunc => {

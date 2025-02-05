@@ -9,14 +9,18 @@ import { createWSServer } from './websocket.js';
 import { cursorTo, clearScreenDown } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
+import { createLogger } from './logger.js';
 
 const httpPort = 8081;
 const cwd = process.cwd(); // current working directory
 const sd = dirname(fileURLToPath(import.meta.url)); // script directory
 
 export function createDevServer(options?: AsciiDoctorDevServerOptions) {
+	const logger = createLogger({ debug: true }); // TODO: pass debug from cli API
+
 	const router = createRouter({
-		cwd: cwd,
+		logger,
+		cwd,
 	});
 	const asciidoctor = createProcessor();
 	const html = createHtmlRenderer({ router: router, sd: sd });
@@ -24,6 +28,7 @@ export function createDevServer(options?: AsciiDoctorDevServerOptions) {
 	const serverPort = options?.server?.port || httpPort;
 
 	const devServer = createServer({
+		logger,
 		settings: {
 			port: serverPort,
 			sd: sd,

@@ -5,7 +5,8 @@ import { HtmlRenderer } from './html.js';
 import { Router } from './router.js';
 import { HandlerFunc } from './types/routing.js';
 import { resolve } from 'node:path';
-import { chain, health, home, reservedStatic } from './middlewares.js';
+import { chain, health, home, logging, reservedStatic } from './middlewares.js';
+import { Logger } from './logger.js';
 
 export interface DevServer {
 	server: Server;
@@ -13,6 +14,7 @@ export interface DevServer {
 }
 
 interface DevServerOptions {
+	logger: Logger;
 	settings: { port: number; sd: string };
 	asciidoctor: AsciidoctorProcessor;
 	html: HtmlRenderer;
@@ -20,6 +22,8 @@ interface DevServerOptions {
 }
 
 export function createServer(opts: DevServerOptions): DevServer {
+	const log = opts.logger.with('server');
+
 	const port = opts.settings.port;
 	const scriptDir = opts.settings.sd;
 	const asciidoctorProcessor = opts.asciidoctor;
@@ -39,13 +43,17 @@ export function createServer(opts: DevServerOptions): DevServer {
 			const convertedDocument = asciidoctorProcessor.convert(path);
 
 			if (!convertedDocument) {
-				res.writeHead(500).end('Failed');
+				log.error(`fail on convert document ${path}`);
+				res.writeHead(500).end(`Cannot convert document ${path}`);
 				return;
 			}
 
 			writeReponse(htmlRenderer.render(convertedDocument));
 		} catch (e) {
-			console.error(e);
+			const error = e as Error;
+			log.error(error.message);
+
+			res.writeHead(500).end();
 		}
 
 		function writeReponse(html: string) {
@@ -85,6 +93,7 @@ export function createServer(opts: DevServerOptions): DevServer {
 		});
 
 	const middlewares = chain(
+		logging(log),
 		health(),
 		reservedStatic(staticFiles),
 		home(htmlRenderer),

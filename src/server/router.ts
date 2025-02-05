@@ -1,5 +1,6 @@
 import { readdir, readFileSync } from 'node:fs';
 import { parse, join } from 'node:path';
+import { Logger } from './logger';
 
 interface Route {
 	route: string;
@@ -16,16 +17,21 @@ export interface Router {
 }
 
 interface RouterOptions {
+	logger: Logger;
 	cwd: string;
 }
 
 export function createRouter(opts: RouterOptions): Router {
+	const log = opts.logger.with('router');
+
 	const router: Router = {
 		routes: new Map(),
 		insertRoute(this: Router, _file: string): Route | undefined {
 			const ok = checkFile(_file);
 
-			if (!ok) return;
+			if (!ok) {
+				return;
+			}
 
 			const { route, file } = ok;
 
@@ -36,13 +42,17 @@ export function createRouter(opts: RouterOptions): Router {
 					file: file,
 					title: title,
 				});
+
+				log.debug(`file ${file} setup in router on ${route} path`);
+
+				return {
+					route: route,
+					file: file,
+					title: title,
+				};
 			}
 
-			return {
-				route: route,
-				file: file,
-				title: title,
-			};
+			log.debug(`file ${_file} already exist in router by ${route} path`);
 		},
 
 		removeRouteByFile(this: Router, removedFile: string): boolean {
@@ -52,7 +62,17 @@ export function createRouter(opts: RouterOptions): Router {
 
 			const { route } = ok;
 
-			return this.routes.delete(route);
+			if (this.routes.delete(route)) {
+				log.debug(
+					`${removedFile} deleted from router with ${route} route`,
+				);
+				return true;
+			} else {
+				log.debug(
+					`${removedFile} NOT deleted from router with ${route} route`,
+				);
+				return false;
+			}
 		},
 
 		getFilePath(this: Router, url: string): string | undefined {
