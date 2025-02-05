@@ -15,8 +15,8 @@ const httpPort = 8081;
 const cwd = process.cwd(); // current working directory
 const sd = dirname(fileURLToPath(import.meta.url)); // script directory
 
-export function createDevServer(options?: AsciiDoctorDevServerOptions) {
-	const logger = createLogger({ debug: true }); // TODO: pass debug from cli API
+export function createDevServer(options: AsciiDoctorDevServerOptions = {}) {
+	const logger = createLogger({ debug: options.debug || false }); // TODO: pass debug from cli API
 
 	const router = createRouter({
 		logger,
@@ -40,7 +40,7 @@ export function createDevServer(options?: AsciiDoctorDevServerOptions) {
 
 	const wss = createWSServer({ httpServer: devServer });
 
-	startWatcher({ cwd, router, wss });
+	startWatcher({ logger, cwd, router, wss });
 
 	devServer.listen(() => {
 		clearScreen();

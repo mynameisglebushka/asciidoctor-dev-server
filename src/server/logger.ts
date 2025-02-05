@@ -113,11 +113,3 @@ export function createLogger(opts: LoggerOptions) {
 
 	return logger;
 }
-
-const logger1 = createLogger({ debug: true });
-const logger2 = logger1.with('logger2');
-const logger3 = logger2.with('logger3');
-
-logger1.debug('debil');
-logger2.debug('debil');
-logger3.debug('debil');
