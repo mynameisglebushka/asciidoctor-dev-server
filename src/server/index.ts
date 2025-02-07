@@ -10,19 +10,26 @@ import { cursorTo, clearScreenDown } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import { createLogger } from './logger.js';
+import { existsSync } from 'node:fs';
 
-const httpPort = 8081;
-const cwd = process.cwd(); // current working directory
 const sd = dirname(fileURLToPath(import.meta.url)); // script directory
 
 export function createDevServer(options: AsciiDoctorDevServerOptions = {}) {
 	const logger = createLogger({ debug: options.debug || false }); // TODO: pass debug from cli API
 
+	const workDir =
+		options.workingDirectory && existsSync(options.workingDirectory)
+			? options.workingDirectory
+			: process.cwd();
+
+	const httpPort = options.server?.port || 8081;
+
+	const asciidoctor = createProcessor();
 	const router = createRouter({
 		logger,
-		cwd,
+		cwd: workDir,
+		asciidoctor,
 	});
-	const asciidoctor = createProcessor();
 	const html = createHtmlRenderer({ router: router, sd: sd });
 
 	const serverPort = options?.server?.port || httpPort;
@@ -40,7 +47,7 @@ export function createDevServer(options: AsciiDoctorDevServerOptions = {}) {
 
 	const wss = createWSServer({ httpServer: devServer });
 
-	startWatcher({ logger, cwd, router, wss });
+	startWatcher({ logger, cwd: workDir, router, wss });
 
 	devServer.listen(() => {
 		clearScreen();

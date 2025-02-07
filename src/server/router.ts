@@ -1,6 +1,7 @@
 import { readdir, readFileSync } from 'node:fs';
 import { parse, join } from 'node:path';
 import { Logger } from './logger';
+import { AsciidoctorProcessor } from './asciidoctor';
 
 interface Route {
 	route: string;
@@ -19,6 +20,7 @@ export interface Router {
 interface RouterOptions {
 	logger: Logger;
 	cwd: string;
+	asciidoctor: AsciidoctorProcessor;
 }
 
 export function createRouter(opts: RouterOptions): Router {
@@ -36,6 +38,8 @@ export function createRouter(opts: RouterOptions): Router {
 			const { route, file } = ok;
 
 			const title = getTitle(_file);
+
+			opts.asciidoctor.load(_file);
 
 			if (!this.routes.has(route)) {
 				this.routes.set(route, {
