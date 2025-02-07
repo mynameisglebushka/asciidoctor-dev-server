@@ -6,8 +6,6 @@ process.title = 'asciidoctor-dev-server';
 
 const args = process.argv.slice(2);
 
-console.log(args);
-
 /**
  * @type {import('../src/server/types/server-options.js').AsciiDoctorDevServerOptions}
  */
@@ -68,8 +66,6 @@ if (args) {
 }
 
 if (!errorHappend) {
-	console.log(opts);
-
 	createDevServer(opts);
 }
 
