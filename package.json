@@ -9,8 +9,8 @@
 	},
 	"scripts": {
 		"build": "pnpm run build:client && pnpm run build:server",
-		"build:client": "rollup --config config/rollup.client.config.ts --configPlugin @rollup/plugin-typescript --bundleConfigAsCjs",
-		"build:server": "rollup --config config/rollup.server.config.ts --configPlugin @rollup/plugin-typescript --bundleConfigAsCjs",
+		"build:client": "rollup --config config/rollup.client.config.js",
+		"build:server": "rollup --config config/rollup.server.config.js",
 		"server": "node ./bin/asciidoctor-dev-server.js -d",
 		"bs": "pnpm build && pnpm run server",
 		"path": "pnpm link -g"

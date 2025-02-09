@@ -1,4 +1,4 @@
-import { readdir, readFileSync } from 'node:fs';
+import { readdir } from 'node:fs';
 import { parse, join } from 'node:path';
 import { Logger } from './logger';
 import { AsciidoctorProcessor } from './asciidoctor';
@@ -37,14 +37,12 @@ export function createRouter(opts: RouterOptions): Router {
 
 			const { route, file } = ok;
 
-			const title = getTitle(_file);
-
-			opts.asciidoctor.load(_file);
+			const fileInfo = opts.asciidoctor.load(_file);
 
 			if (!this.routes.has(route)) {
 				this.routes.set(route, {
 					file: file,
-					title: title,
+					title: fileInfo.title || '',
 				});
 
 				log.debug(`file ${file} setup in router on ${route} path`);
@@ -52,7 +50,7 @@ export function createRouter(opts: RouterOptions): Router {
 				return {
 					route: route,
 					file: file,
-					title: title,
+					title: fileInfo.title,
 				};
 			}
 
@@ -129,20 +127,4 @@ const checkFile = (path: string) => {
 		route: '/' + join(pp.dir, pp.name),
 		file: join(pp.dir, pp.base),
 	};
-};
-
-const getTitle = (path: string) => {
-	const content = readFileSync(path, {
-		encoding: 'utf-8',
-	});
-
-	const regRes = /^= ([^\n]+)/.exec(content);
-
-	let title: string = '';
-
-	if (regRes && regRes.length === 2) {
-		title = regRes[1];
-	}
-
-	return title;
 };

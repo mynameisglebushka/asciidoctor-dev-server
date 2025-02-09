@@ -8,8 +8,10 @@
 		"declaration": true,
 		"noImplicitOverride": true,
 		"noUnusedLocals": true,
+		"useUnknownInCatchVariables": false,
+		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
-		"useUnknownInCatchVariables": false
+		"typeRoots": ["../src/types"]
 	},
-	"exclude": ["../node_modules", "../dist"]
+	"exclude": ["../node_modules", "../dist", "../src/types"]
 }

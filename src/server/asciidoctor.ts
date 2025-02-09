@@ -1,13 +1,18 @@
 import Processor from '@asciidoctor/core';
-import Kroki from 'asciidoctor-kroki';
+import { register as registerKroki } from 'asciidoctor-kroki';
 import {
 	findIncludedContent,
 	IncludedFile,
 } from './asciidoctor/asciidoctor-extensions';
 
+interface FileInfo {
+	title?: string;
+	included_files?: IncludedFile[];
+}
+
 export interface AsciidoctorProcessor {
 	convert(filePath: string): string;
-	load(filePath: string): void;
+	load(filePath: string): FileInfo;
 }
 
 // interface AsciidoctorProcessorOptions {}
@@ -19,7 +24,7 @@ export function createProcessor(): AsciidoctorProcessor {
 		convert(filePath) {
 			const register = asciidoctor.Extensions.create();
 
-			Kroki.register(register);
+			registerKroki(register);
 
 			const convertedDocument = asciidoctor.convertFile(filePath, {
 				standalone: true,
@@ -44,7 +49,7 @@ export function createProcessor(): AsciidoctorProcessor {
 			return result;
 		},
 
-		load(filePath: string) {
+		load(filePath: string): FileInfo {
 			const register = asciidoctor.Extensions.create();
 
 			const files: IncludedFile[] = [];
@@ -57,9 +62,15 @@ export function createProcessor(): AsciidoctorProcessor {
 				extension_registry: register,
 			});
 
-			const catalog = doc.getCatalog();
+			interface CatalogWrapper {
+				includes: {
+					$$keys: string[];
+				};
+			}
 
-			const includes = catalog['includes'].$$keys;
+			const catalog = doc.getCatalog() as CatalogWrapper;
+
+			const includes = catalog.includes.$$keys;
 
 			if (includes) {
 				for (const include in includes) {
@@ -70,7 +81,24 @@ export function createProcessor(): AsciidoctorProcessor {
 				}
 			}
 
-			console.log(files);
+			// For some reasons Asciidoctor.Document.getHeader() API says that return value is string, but for real is object
+			interface HeaderWrapper {
+				title?: string;
+			}
+
+			const header = doc.getHeader() as HeaderWrapper;
+
+			let title: string | undefined = undefined;
+			if (header) {
+				if (header.title) {
+					title = header.title;
+				}
+			}
+
+			return {
+				title: title,
+				included_files: files.length > 0 ? files : undefined,
+			};
 		},
 	};
 
