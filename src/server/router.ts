@@ -1,110 +1,147 @@
 import { readdir } from 'node:fs';
-import { parse, join } from 'node:path';
+import { parse, join, resolve } from 'node:path';
 import { Logger } from './logger';
-import { AsciidoctorProcessor } from './asciidoctor';
+import { AsciidoctorProcessor, IncludedFile } from './asciidoctor';
 
-interface Route {
+type RouterMap = Map<string, RouteInfo>;
+
+interface Route extends RouteInfo {
 	route: string;
+}
+
+interface RouteInfo {
 	file: string;
 	title?: string;
+	absPath: string;
+	includedFiles?: IncludedFile[];
 }
 
 export interface Router {
-	readonly routes: Map<string, { title: string; file: string }>;
+	readonly routes: RouterMap;
 	insertRoute(file: string): Route | undefined;
 	removeRouteByFile(file: string): boolean;
 	getFilePath(route: string): string | undefined;
 	getRouteByFilePath(file: string): Route | undefined;
+	getAbsPathByRoute(route: string): string | undefined;
 }
 
 interface RouterOptions {
 	logger: Logger;
-	cwd: string;
 	asciidoctor: AsciidoctorProcessor;
+	cwd: string;
+	path: string;
 }
 
 export function createRouter(opts: RouterOptions): Router {
 	const log = opts.logger.with('router');
+	const processor = opts.asciidoctor;
 
-	const router: Router = {
-		routes: new Map(),
-		insertRoute(this: Router, _file: string): Route | undefined {
-			const ok = checkFile(_file);
+	const cwd = opts.cwd;
+	const path = opts.path;
 
-			if (!ok) {
-				return;
-			}
+	const checkFile = (_file: string) => {
+		if (/(^|[/\\])\../.test(_file) || _file.includes('node_modules'))
+			return;
 
-			const { route, file } = ok;
+		const pp = parse(_file);
 
-			const fileInfo = opts.asciidoctor.load(_file);
+		if (pp.ext !== '.adoc') return;
 
-			if (!this.routes.has(route)) {
-				this.routes.set(route, {
-					file: file,
-					title: fileInfo.title || '',
-				});
-
-				log.debug(`file ${file} setup in router on ${route} path`);
-
-				return {
-					route: route,
-					file: file,
-					title: fileInfo.title,
-				};
-			}
-
-			log.debug(`file ${_file} already exist in router by ${route} path`);
-		},
-
-		removeRouteByFile(this: Router, removedFile: string): boolean {
-			const ok = checkFile(removedFile);
-
-			if (!ok) return false;
-
-			const { route } = ok;
-
-			if (this.routes.delete(route)) {
-				log.debug(
-					`${removedFile} deleted from router with ${route} route`,
-				);
-				return true;
-			} else {
-				log.debug(
-					`${removedFile} NOT deleted from router with ${route} route`,
-				);
-				return false;
-			}
-		},
-
-		getFilePath(this: Router, url: string): string | undefined {
-			const r = this.routes.get(url);
-
-			if (!r) return;
-
-			return r.file;
-		},
-
-		getRouteByFilePath(this: Router, file: string): Route | undefined {
-			let r: Route | undefined = undefined;
-
-			this.routes.forEach((v, k) => {
-				if (r) return;
-
-				if (v.file === file) {
-					r = {
-						route: k,
-						file: v.file,
-						title: v.title,
-					};
-				}
-			});
-
-			return r;
-		},
+		return {
+			route: '/' + join(pp.dir, pp.name),
+			file: join(pp.dir, pp.base),
+			absPath: resolve(cwd, path, join(pp.dir, pp.base)),
+		};
 	};
 
-	readdir(opts.cwd, { recursive: true, encoding: 'utf-8' }, (err, files) => {
+	const routerMap: RouterMap = new Map();
+
+	function insertRoute(_file: string): Route | undefined {
+		const ok = checkFile(_file);
+
+		if (!ok) {
+			return;
+		}
+
+		const { route, file, absPath } = ok;
+
+		const { title, included_files } = processor.collectFileInfo(absPath);
+
+		if (routerMap.has(route)) {
+			log.debug(`file ${_file} already exist in router by ${route} path`);
+			return;
+		}
+
+		const routeInfo: RouteInfo = {
+			file: file,
+			title: title,
+			includedFiles: included_files,
+			absPath,
+		};
+
+		routerMap.set(route, routeInfo);
+
+		log.debug(`file ${file} setup in router on ${route} path`);
+
+		return {
+			route: route,
+			...routeInfo,
+		};
+	}
+
+	function removeRouteByFile(_file: string): boolean {
+		const ok = checkFile(_file);
+
+		if (!ok) return false;
+
+		const { route } = ok;
+
+		const isRemove = routerMap.delete(route);
+
+		const logMsg = isRemove
+			? `${_file} deleted from router with ${route} route`
+			: `${_file} NOT deleted from router with ${route} route`;
+
+		log.debug(logMsg);
+
+		return isRemove;
+	}
+
+	function getFileByRoute(route: string): string | undefined {
+		const r = routerMap.get(route);
+
+		return r ? r.file : undefined;
+	}
+
+	function getAbsPathByRoute(route: string): string | undefined {
+		const r = routerMap.get(route);
+
+		return r ? r.absPath : undefined;
+	}
+
+	function getRouteByFile(file: string): Route | undefined {
+		for (const [route, info] of routerMap) {
+			if (info.file === file) {
+				return {
+					route,
+					...info,
+				};
+			}
+		}
+
+		return undefined;
+	}
+
+	const router: Router = {
+		routes: routerMap,
+		insertRoute: insertRoute,
+		removeRouteByFile: removeRouteByFile,
+		getFilePath: getFileByRoute,
+		getRouteByFilePath: getRouteByFile,
+		getAbsPathByRoute: getAbsPathByRoute,
+	};
+
+	readdir(path, { recursive: true, encoding: 'utf-8' }, (err, files) => {
 		if (err) console.log(err);
 		else {
 			files.forEach((_file) => {
@@ -115,16 +152,3 @@ export function createRouter(opts: RouterOptions): Router {
 
 	return router;
 }
-
-const checkFile = (path: string) => {
-	if (/(^|[/\\])\../.test(path) || path.includes('node_modules')) return;
-
-	const pp = parse(path);
-
-	if (pp.ext !== '.adoc') return;
-
-	return {
-		route: '/' + join(pp.dir, pp.name),
-		file: join(pp.dir, pp.base),
-	};
-};

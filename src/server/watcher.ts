@@ -15,21 +15,22 @@ import { Logger } from './logger.js';
 
 interface WatcherOptions {
 	logger: Logger;
-	cwd: string;
 	router: Router;
 	wss: WSServer;
+	path: string;
 }
 
 export function startWatcher(opts: WatcherOptions) {
 	const log = opts.logger.with('watcher');
 
-	const cwd = opts.cwd;
 	const router = opts.router;
 	const wss = opts.wss;
 
-	const watcher = chokidar.watch(cwd, {
+	const path = opts.path;
+
+	const watcher = chokidar.watch('.', {
 		ignored: [/(^|[/\\])\../, 'node_modules'],
-		cwd: cwd,
+		cwd: path,
 		ignoreInitial: true,
 	});
 

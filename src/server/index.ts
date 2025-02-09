@@ -10,35 +10,54 @@ import { cursorTo, clearScreenDown } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import { createLogger } from './logger.js';
-import { existsSync } from 'node:fs';
+import { statSync } from 'node:fs';
 
-const sd = dirname(fileURLToPath(import.meta.url)); // script directory
+const default_server_port = 8081;
 
 export function createDevServer(options: AsciiDoctorDevServerOptions = {}) {
-	const logger = createLogger({ debug: options.debug || false }); // TODO: pass debug from cli API
+	const logger = createLogger({ debug: options.debug || false });
 
-	const workDir =
-		options.workingDirectory && existsSync(options.workingDirectory)
-			? options.workingDirectory
-			: process.cwd();
+	const current_workind_directory = process.cwd();
 
-	const httpPort = options.server?.port || 8081;
+	let content_directory = '';
+	if (options.workingDirectory) {
+		const stat = statSync(options.workingDirectory, {
+			throwIfNoEntry: false,
+		});
+
+		if (!stat) {
+			logger.error(`no such directory -> ${options.workingDirectory}`);
+			return;
+		}
+
+		if (!stat.isDirectory()) {
+			logger.error(`path ${options.workingDirectory} is not a directory`);
+			return;
+		}
+
+		content_directory = options.workingDirectory;
+	} else {
+		content_directory = current_workind_directory;
+	}
+
+	const script_directory = dirname(fileURLToPath(import.meta.url));
 
 	const asciidoctor = createProcessor();
 	const router = createRouter({
 		logger,
-		cwd: workDir,
+		cwd: current_workind_directory,
 		asciidoctor,
+		path: content_directory,
 	});
-	const html = createHtmlRenderer({ router: router, sd: sd });
+	const html = createHtmlRenderer({ router: router, sd: script_directory });
 
-	const serverPort = options?.server?.port || httpPort;
+	const port = options.server?.port || default_server_port;
 
 	const devServer = createServer({
 		logger,
 		settings: {
-			port: serverPort,
-			sd: sd,
+			port,
+			sd: script_directory,
 		},
 		asciidoctor,
 		html,
@@ -47,10 +66,15 @@ export function createDevServer(options: AsciiDoctorDevServerOptions = {}) {
 
 	const wss = createWSServer({ httpServer: devServer });
 
-	startWatcher({ logger, cwd: workDir, router, wss });
+	startWatcher({ logger, path: content_directory, router, wss });
 
 	devServer.listen(() => {
-		clearScreen();
+		const repeatCount = process.stdout.rows - 2;
+		const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : '';
+		console.log(blank);
+		cursorTo(process.stdout, 0, 0);
+		clearScreenDown(process.stdout);
+
 		console.log(
 			// prettier-ignore
 			'┏━━━┓━━┏┓━━━━━━━━┏━━━┓━━━━━━━━┏━━━┓━━━━━━━━━━━━━━━━━━' + '\n' + 
@@ -64,14 +88,6 @@ export function createDevServer(options: AsciiDoctorDevServerOptions = {}) {
 		);
 
 		console.log(`AsciiDoctor Dev Server start on:\n`);
-		console.log(`-> Local - http://localhost:${serverPort}`);
+		console.log(`-> Local - http://localhost:${port}`);
 	});
-}
-
-function clearScreen() {
-	const repeatCount = process.stdout.rows - 2;
-	const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : '';
-	console.log(blank);
-	cursorTo(process.stdout, 0, 0);
-	clearScreenDown(process.stdout);
 }

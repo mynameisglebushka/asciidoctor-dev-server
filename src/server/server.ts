@@ -34,7 +34,7 @@ export function createServer(opts: DevServerOptions): DevServer {
 		try {
 			const url = req.url || '/';
 
-			const path = router.getFilePath(url);
+			const path = router.getAbsPathByRoute(url);
 			if (!path) {
 				writeReponse(htmlRenderer.notFound(url));
 				return;
