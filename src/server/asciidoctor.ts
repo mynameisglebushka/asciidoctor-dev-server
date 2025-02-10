@@ -93,8 +93,6 @@ export function createProcessor(): AsciidoctorProcessor {
 
 		const header = doc.getHeader() as HeaderWrapper;
 
-		console.log(typeof header);
-
 		let title: string | undefined = undefined;
 		if (header) {
 			if (header.title) {
