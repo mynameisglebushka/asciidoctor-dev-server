@@ -35,8 +35,8 @@ export function createProcessor(): AsciidoctorProcessor {
 			to_file: false,
 			safe: 'safe',
 			attributes: {
-				stylesdir: '/public',
-				stylesheet: '@render-styles',
+				stylesdir: '/__ads/node_modules/@asciidoctor/core/dist/css',
+				stylesheet: 'asciidoctor.css',
 				linkcss: true,
 			},
 			extension_registry: register,

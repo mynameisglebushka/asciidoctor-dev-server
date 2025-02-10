@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { HandlerFunc, Middleware } from './types/routing.js';
 import { HtmlRenderer } from './html.js';
 import { Logger } from './logger.js';
+import { join } from 'node:path';
 
 export const logging = (logger: Logger): Middleware => {
 	return (next: HandlerFunc): HandlerFunc => {
@@ -28,48 +29,52 @@ export const health = (): Middleware => {
 };
 
 type StaticFiles = Map<
-	RegExp,
+	string,
 	{
-		path: string;
 		contentType: string;
 		modify?: (content: string) => string;
 	}
 >;
 
-export const reservedStatic = (staticFiles: StaticFiles): Middleware => {
+export const reservedStatic = (opts: {
+	files: StaticFiles;
+	scriptDir: string;
+}): Middleware => {
 	return (next: HandlerFunc): HandlerFunc => {
 		return (req, res) => {
-			if (req.url === undefined) {
+			const path = req.url!;
+
+			const firstSep = path.indexOf('/', 1);
+
+			if (path.slice(0, firstSep) !== '/__ads') {
 				next(req, res);
 				return;
 			}
 
-			let content: string = '';
-			let contentType: string = '';
+			const scriptDir = opts.scriptDir;
+			const filesMap = opts.files;
 
-			staticFiles.forEach((val, pattern) => {
-				if (content) return;
+			const relativeFilePath = path.slice(firstSep + 1);
 
-				if (pattern.test(req.url || '')) {
-					const fileContent = readFileSync(val.path, {
-						encoding: 'utf-8',
-					});
+			const fileContent = readFileSync(
+				join(scriptDir, relativeFilePath),
+				{
+					encoding: 'utf-8',
+				},
+			);
 
-					content = val.modify
-						? val.modify(fileContent)
-						: fileContent;
+			const ok = filesMap.get(relativeFilePath);
 
-					contentType = val.contentType;
-				}
-			});
-
-			if (content) {
-				res.writeHead(200, {
-					'content-type': contentType,
-				}).end(content);
-			} else {
-				next(req, res);
+			if (!ok) {
+				res.writeHead(404).end(`file ${relativeFilePath} not found`);
+				return;
 			}
+
+			const { contentType, modify } = ok;
+
+			const content = modify ? modify(fileContent) : fileContent;
+
+			res.writeHead(200, { 'content-type': contentType }).end(content);
 		};
 	};
 };

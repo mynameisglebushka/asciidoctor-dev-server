@@ -4,8 +4,13 @@ import { AsciidoctorProcessor } from './asciidoctor.js';
 import { HtmlRenderer } from './html.js';
 import { Router } from './router.js';
 import { HandlerFunc } from './types/routing.js';
-import { resolve } from 'node:path';
-import { chain, health, home, logging, reservedStatic } from './middlewares.js';
+import {
+	reservedStatic,
+	chain,
+	health,
+	home,
+	logging,
+} from './middlewares.js';
 import { Logger } from './logger.js';
 
 export interface DevServer {
@@ -61,41 +66,30 @@ export function createServer(opts: DevServerOptions): DevServer {
 		}
 	};
 
-	const staticFiles = new Map()
-		.set(/@asciidoctor-dev-client/, {
-			path: resolve(scriptDir, 'dist/client/@asciidoctor-dev-client.js'),
+	const _staticFiles = new Map()
+		.set('dist/client/@asciidoctor-dev-client.js', {
 			contentType: 'text/javascript',
 			modify: (content: string) => {
 				return content.replace('__PORT__', JSON.stringify(port));
 			},
 		})
-		.set(/@asciidoctor-dev-render-style/, {
-			path: resolve(scriptDir, 'public/asciidoctor-dev-render.css'),
+		.set('public/asciidoctor-dev-render.css', {
 			contentType: 'text/css',
 		})
-		.set(/@asciidoctor-dev-self-page-style/, {
-			path: resolve(
-				scriptDir,
-				'public/asciidoctor-dev-self-page.css',
-			),
+		.set('public/asciidoctor-dev-self-page.css', {
 			contentType: 'text/css',
 		})
-		.set(/@render-styles/, {
-			path: resolve(scriptDir, 'public/render-styles.css'),
+		.set('public/render-styles.css', {
 			contentType: 'text/css',
 		})
-		.set(/@asciidoctor.css/, {
-			path: resolve(
-				scriptDir,
-				'node_modules/@asciidoctor/core/dist/css/asciidoctor.css',
-			),
+		.set('node_modules/@asciidoctor/core/dist/css/asciidoctor.css', {
 			contentType: 'text/css',
 		});
 
 	const middlewares = chain(
 		logging(log),
 		health(),
-		reservedStatic(staticFiles),
+		reservedStatic({ files: _staticFiles, scriptDir: scriptDir }),
 		home(htmlRenderer),
 	);
 
