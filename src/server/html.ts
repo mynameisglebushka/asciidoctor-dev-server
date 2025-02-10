@@ -19,19 +19,19 @@ export function createHtmlRenderer(opts: HtmlRendererOptions): HtmlRenderer {
 	const scriptDir = opts.sd;
 
 	const homeTemplate = readFileSync(
-		resolve(scriptDir, '../../public/home_page.html'),
+		resolve(scriptDir, 'public/home_page.html'),
 		{
 			encoding: 'utf-8',
 		},
 	);
 	const notFoundTemplate = readFileSync(
-		resolve(scriptDir, '../../public/notfound_page.html'),
+		resolve(scriptDir, 'public/notfound_page.html'),
 		{
 			encoding: 'utf-8',
 		},
 	);
 	const renderedTemplate = readFileSync(
-		resolve(scriptDir, '../../public/rendered_page.html'),
+		resolve(scriptDir, 'public/rendered_page.html'),
 		{
 			encoding: 'utf-8',
 		},

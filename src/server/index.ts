@@ -8,7 +8,7 @@ import { createWSServer } from './websocket.js';
 
 import { cursorTo, clearScreenDown } from 'node:readline';
 import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { createLogger } from './logger.js';
 import { statSync } from 'node:fs';
 
@@ -40,7 +40,10 @@ export function createDevServer(options: AsciiDoctorDevServerOptions = {}) {
 		content_directory = current_workind_directory;
 	}
 
-	const script_directory = dirname(fileURLToPath(import.meta.url));
+	const script_directory = resolve(
+		dirname(fileURLToPath(import.meta.url)),
+		'../..',
+	);
 
 	const asciidoctor = createProcessor();
 	const router = createRouter({

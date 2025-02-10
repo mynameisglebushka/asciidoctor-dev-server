@@ -63,31 +63,31 @@ export function createServer(opts: DevServerOptions): DevServer {
 
 	const staticFiles = new Map()
 		.set(/@asciidoctor-dev-client/, {
-			path: resolve(scriptDir, '../client/@asciidoctor-dev-client.js'),
+			path: resolve(scriptDir, 'dist/client/@asciidoctor-dev-client.js'),
 			contentType: 'text/javascript',
 			modify: (content: string) => {
 				return content.replace('__PORT__', JSON.stringify(port));
 			},
 		})
 		.set(/@asciidoctor-dev-render-style/, {
-			path: resolve(scriptDir, '../../public/asciidoctor-dev-render.css'),
+			path: resolve(scriptDir, 'public/asciidoctor-dev-render.css'),
 			contentType: 'text/css',
 		})
 		.set(/@asciidoctor-dev-self-page-style/, {
 			path: resolve(
 				scriptDir,
-				'../../public/asciidoctor-dev-self-page.css',
+				'public/asciidoctor-dev-self-page.css',
 			),
 			contentType: 'text/css',
 		})
 		.set(/@render-styles/, {
-			path: resolve(scriptDir, '../../public/render-styles.css'),
+			path: resolve(scriptDir, 'public/render-styles.css'),
 			contentType: 'text/css',
 		})
 		.set(/@asciidoctor.css/, {
 			path: resolve(
 				scriptDir,
-				'../../node_modules/@asciidoctor/core/dist/css/asciidoctor.css',
+				'node_modules/@asciidoctor/core/dist/css/asciidoctor.css',
 			),
 			contentType: 'text/css',
 		});
