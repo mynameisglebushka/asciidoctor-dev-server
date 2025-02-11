@@ -8,16 +8,39 @@ import { createWSServer } from './websocket.js';
 
 import { cursorTo, clearScreenDown } from 'node:readline';
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { createLogger } from './logger.js';
-import { statSync } from 'node:fs';
+import { statSync, existsSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { cwd } from 'node:process';
+import { resolveConfig } from './config.js';
 
 const default_server_port = 8081;
+const configName = '.ads.config.js';
 
-export function createDevServer(options: AsciiDoctorDevServerOptions = {}) {
+export async function createDevServer(
+	options: AsciiDoctorDevServerOptions = {},
+) {
 	const logger = createLogger({ debug: options.debug || false });
 
 	const current_workind_directory = process.cwd();
+	const configLocations = [
+		join(cwd(), configName),
+		join(homedir() + '.ads/', configName),
+	];
+
+	let finalConfig = '';
+	for (const idx in configLocations) {
+		const maybeConfig = configLocations[idx];
+
+		if (existsSync(maybeConfig)) {
+			finalConfig = maybeConfig;
+			break;
+		}
+	}
+
+	const _config = resolveConfig(finalConfig);
+	logger.debug(`${JSON.stringify(_config)}`);
 
 	let content_directory = '';
 	if (options.workingDirectory) {
