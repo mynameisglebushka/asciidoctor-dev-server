@@ -39,8 +39,22 @@ export async function createDevServer(
 		}
 	}
 
-	const _config = resolveConfig(finalConfig);
-	logger.debug(`${JSON.stringify(_config)}`);
+	const script_directory = resolve(
+		dirname(fileURLToPath(import.meta.url)),
+		'../..',
+	);
+
+	const _config = await resolveConfig(finalConfig, script_directory, options);
+	if (typeof _config === 'string') {
+		logger.error(_config);
+		return;
+	}
+
+	// TODO: Убрать после безобразия
+	if (typeof _config !== 'string') {
+		logger.debug(`config ${JSON.stringify(_config)}`);
+		return;
+	}
 
 	let content_directory = '';
 	if (options.workingDirectory) {
@@ -62,11 +76,6 @@ export async function createDevServer(
 	} else {
 		content_directory = current_workind_directory;
 	}
-
-	const script_directory = resolve(
-		dirname(fileURLToPath(import.meta.url)),
-		'../..',
-	);
 
 	const asciidoctor = createProcessor();
 	const router = createRouter({
