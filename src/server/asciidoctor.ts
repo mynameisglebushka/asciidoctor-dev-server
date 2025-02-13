@@ -2,6 +2,7 @@ import Processor, { Extensions } from '@asciidoctor/core';
 import { Reader } from '@asciidoctor/core';
 import { Document } from '@asciidoctor/core';
 import { register as registerKroki } from 'asciidoctor-kroki';
+import { ResolvedConfig } from './config';
 
 interface FileInfo {
 	title?: string;
@@ -20,9 +21,14 @@ export interface AsciidoctorProcessor {
 	collectFileInfo(file: string): FileInfo;
 }
 
-// interface AsciidoctorProcessorOptions {}
+interface AsciidoctorProcessorOptions {
+	config: ResolvedConfig;
+}
 
-export function createProcessor(): AsciidoctorProcessor {
+export function createProcessor(
+	opts: AsciidoctorProcessorOptions,
+): AsciidoctorProcessor {
+	const adocOpts = opts.config.asciidoctor;
 	const asciidoctor = Processor();
 
 	function convert(file: string): string {
@@ -30,15 +36,13 @@ export function createProcessor(): AsciidoctorProcessor {
 
 		registerKroki(register);
 
+		if (adocOpts.extensions) adocOpts.extensions(register);
+
 		const convertedDocument = asciidoctor.convertFile(file, {
 			standalone: true,
 			to_file: false,
-			safe: 'safe',
-			attributes: {
-				stylesdir: '/__ads/node_modules/@asciidoctor/core/dist/css',
-				stylesheet: 'asciidoctor.css',
-				linkcss: true,
-			},
+			safe: adocOpts.safe,
+			attributes: adocOpts.attributes,
 			extension_registry: register,
 		});
 

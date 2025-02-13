@@ -48,7 +48,7 @@ export async function createDevServer(
 		return;
 	}
 
-	const asciidoctor = createProcessor();
+	const asciidoctor = createProcessor({ config });
 
 	const router = createRouter({
 		logger,
