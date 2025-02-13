@@ -2,6 +2,7 @@ import { readdir } from 'node:fs';
 import { parse, join, resolve } from 'node:path';
 import { Logger } from './logger';
 import { AsciidoctorProcessor, IncludedFile } from './asciidoctor';
+import { ResolvedConfig } from './config';
 
 type RouterMap = Map<string, RouteInfo>;
 
@@ -27,17 +28,16 @@ export interface Router {
 
 interface RouterOptions {
 	logger: Logger;
+	config: ResolvedConfig;
 	asciidoctor: AsciidoctorProcessor;
-	cwd: string;
-	path: string;
 }
 
 export function createRouter(opts: RouterOptions): Router {
 	const log = opts.logger.with('router');
 	const processor = opts.asciidoctor;
 
-	const cwd = opts.cwd;
-	const path = opts.path;
+	const cwd = opts.config.dirs.current_working_directory;
+	const path = opts.config.dirs.content_dir;
 
 	const checkFile = (_file: string) => {
 		if (/(^|[/\\])\../.test(_file) || _file.includes('node_modules'))

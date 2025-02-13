@@ -8,6 +8,7 @@ import {
 	socketEvent,
 } from '../shared/types/websocket-event.js';
 import { Logger } from './logger.js';
+import { ResolvedConfig } from './config.js';
 
 // export interface _Wathcer {
 
@@ -15,9 +16,9 @@ import { Logger } from './logger.js';
 
 interface WatcherOptions {
 	logger: Logger;
+	config: ResolvedConfig;
 	router: Router;
 	wss: WSServer;
-	path: string;
 }
 
 export function startWatcher(opts: WatcherOptions) {
@@ -26,7 +27,7 @@ export function startWatcher(opts: WatcherOptions) {
 	const router = opts.router;
 	const wss = opts.wss;
 
-	const path = opts.path;
+	const path = opts.config.dirs.content_dir;
 
 	const watcher = chokidar.watch('.', {
 		ignored: [/(^|[/\\])\../, 'node_modules'],

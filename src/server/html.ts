@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 import { Router } from './router';
 import { resolve } from 'node:path';
+import { ResolvedConfig } from './config';
 
 export interface HtmlRenderer {
 	home(): string;
@@ -11,12 +12,12 @@ export interface HtmlRenderer {
 
 interface HtmlRendererOptions {
 	router: Router;
-	sd: string;
+	config: ResolvedConfig;
 }
 
 export function createHtmlRenderer(opts: HtmlRendererOptions): HtmlRenderer {
 	const router = opts.router;
-	const scriptDir = opts.sd;
+	const scriptDir = opts.config.dirs.script_dir;
 
 	const homeTemplate = readFileSync(
 		resolve(scriptDir, 'public/home_page.html'),

@@ -4,14 +4,9 @@ import { AsciidoctorProcessor } from './asciidoctor.js';
 import { HtmlRenderer } from './html.js';
 import { Router } from './router.js';
 import { HandlerFunc } from './types/routing.js';
-import {
-	reservedStatic,
-	chain,
-	health,
-	home,
-	logging,
-} from './middlewares.js';
+import { reservedStatic, chain, health, home, logging } from './middlewares.js';
 import { Logger } from './logger.js';
+import { ResolvedConfig } from './config.js';
 
 export interface DevServer {
 	server: Server;
@@ -20,7 +15,7 @@ export interface DevServer {
 
 interface DevServerOptions {
 	logger: Logger;
-	settings: { port: number; sd: string };
+	config: ResolvedConfig;
 	asciidoctor: AsciidoctorProcessor;
 	html: HtmlRenderer;
 	router: Router;
@@ -29,8 +24,8 @@ interface DevServerOptions {
 export function createServer(opts: DevServerOptions): DevServer {
 	const log = opts.logger.with('server');
 
-	const port = opts.settings.port;
-	const scriptDir = opts.settings.sd;
+	const port = opts.config.server.port;
+	const scriptDir = opts.config.dirs.script_dir;
 	const asciidoctorProcessor = opts.asciidoctor;
 	const htmlRenderer = opts.html;
 	const router = opts.router;
