@@ -1,8 +1,8 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { HandlerFunc, Middleware } from './types/routing.js';
 import { HtmlRenderer } from './html.js';
 import { Logger } from './logger.js';
-import { join } from 'node:path';
+import { extname, join } from 'node:path';
 
 export const logging = (logger: Logger): Middleware => {
 	return (next: HandlerFunc): HandlerFunc => {
@@ -39,42 +39,85 @@ type StaticFiles = Map<
 export const reservedStatic = (opts: {
 	files: StaticFiles;
 	scriptDir: string;
+	configDir: string;
 }): Middleware => {
 	return (next: HandlerFunc): HandlerFunc => {
+		const mimeTypes: { [key: string]: string } = {
+			js: 'text/javascript',
+			css: 'text/css',
+			adoc: 'text/plain',
+			ico: 'image/vnd.microsoft.icon',
+			png: 'immage/png',
+		};
+
+		const defaultMime: string = 'text/plain';
+
+		const filesMap = opts.files;
+		const scriptDir = opts.scriptDir;
+		const configPath = opts.configDir;
+
 		return (req, res) => {
-			const path = req.url!;
+			function writeContent(type: string, content: string) {
+				res.writeHead(200, { 'content-type': type }).end(content);
+			}
 
-			const firstSep = path.indexOf('/', 1);
+			function notFound(path: string) {
+				res.writeHead(404).end(`file ${path} not found`);
+			}
 
-			if (path.slice(0, firstSep) !== '/__ads') {
-				next(req, res);
+			let path = req.url!;
+
+			if (path.startsWith('/__ads')) {
+				const relativeFilePath = path.slice(path.indexOf('/', 1) + 1);
+
+				const ok = filesMap.get(relativeFilePath);
+
+				if (!ok) {
+					notFound(relativeFilePath);
+					return;
+				}
+
+				const fileContent = readFileSync(
+					join(scriptDir, relativeFilePath),
+					{
+						encoding: 'utf-8',
+					},
+				);
+
+				const { contentType, modify } = ok;
+
+				const content = modify ? modify(fileContent) : fileContent;
+
+				writeContent(contentType, content);
 				return;
 			}
 
-			const scriptDir = opts.scriptDir;
-			const filesMap = opts.files;
+			// Этот if должен работать не от пути конфига, а от пути файла с контентом
+			// А при заполнении конфига необходимо указать, чтобы указывали абсолютный путь
+			// Потому что есть 3 источника путей файлов - каталог скрипта (/__ads), каталог конфига (абсолютный путь), и относительный путь для контента в файле
+			const fileExt = extname(path);
+			if (!['', '.'].includes(fileExt)) {
+				if (!path.includes(configPath)) {
+					path = join(configPath, path);
+				}
 
-			const relativeFilePath = path.slice(firstSep + 1);
+				if (!existsSync(path)) {
+					notFound(path);
+					return;
+				}
 
-			const fileContent = readFileSync(
-				join(scriptDir, relativeFilePath),
-				{
+				const fileContent = readFileSync(path, {
 					encoding: 'utf-8',
-				},
-			);
+				});
 
-			const ok = filesMap.get(relativeFilePath);
+				const contentType = mimeTypes[fileExt] || defaultMime;
 
-			if (!ok) {
-				res.writeHead(404).end(`file ${relativeFilePath} not found`);
+				writeContent(contentType, fileContent);
+
 				return;
 			}
 
-			const { contentType, modify } = ok;
-
-			const content = modify ? modify(fileContent) : fileContent;
-
-			res.writeHead(200, { 'content-type': contentType }).end(content);
+			next(req, res);
 		};
 	};
 };
