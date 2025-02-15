@@ -3,6 +3,7 @@ import { HandlerFunc, Middleware } from './types/routing.js';
 import { HtmlRenderer } from './html.js';
 import { Logger } from './logger.js';
 import { extname, join } from 'node:path';
+import mime from 'mime-types';
 
 export const logging = (logger: Logger): Middleware => {
 	return (next: HandlerFunc): HandlerFunc => {
@@ -40,24 +41,18 @@ export const reservedStatic = (opts: {
 	files: StaticFiles;
 	scriptDir: string;
 	configDir: string;
+	contentDir: string;
 }): Middleware => {
 	return (next: HandlerFunc): HandlerFunc => {
-		const mimeTypes: { [key: string]: string } = {
-			js: 'text/javascript',
-			css: 'text/css',
-			adoc: 'text/plain',
-			ico: 'image/vnd.microsoft.icon',
-			png: 'immage/png',
-		};
-
-		const defaultMime: string = 'text/plain';
+		const defaultMime: string = 'application/octet-stream';
 
 		const filesMap = opts.files;
 		const scriptDir = opts.scriptDir;
 		const configPath = opts.configDir;
+		const contentPath = opts.contentDir;
 
 		return (req, res) => {
-			function writeContent(type: string, content: string) {
+			function writeContent(type: string, content: unknown) {
 				res.writeHead(200, { 'content-type': type }).end(content);
 			}
 
@@ -92,13 +87,17 @@ export const reservedStatic = (opts: {
 				return;
 			}
 
-			// Этот if должен работать не от пути конфига, а от пути файла с контентом
-			// А при заполнении конфига необходимо указать, чтобы указывали абсолютный путь
-			// Потому что есть 3 источника путей файлов - каталог скрипта (/__ads), каталог конфига (абсолютный путь), и относительный путь для контента в файле
 			const fileExt = extname(path);
+
+			// TODO: Доработать хэндлер на прием .adoc запросов
+			if (fileExt === '.adoc') {
+				next(req, res);
+				return;
+			}
+
 			if (!['', '.'].includes(fileExt)) {
 				if (!path.includes(configPath)) {
-					path = join(configPath, path);
+					path = join(contentPath, path);
 				}
 
 				if (!existsSync(path)) {
@@ -106,11 +105,9 @@ export const reservedStatic = (opts: {
 					return;
 				}
 
-				const fileContent = readFileSync(path, {
-					encoding: 'utf-8',
-				});
+				const fileContent = readFileSync(path);
 
-				const contentType = mimeTypes[fileExt] || defaultMime;
+				const contentType = mime.contentType(fileExt) || defaultMime;
 
 				writeContent(contentType, fileContent);
 

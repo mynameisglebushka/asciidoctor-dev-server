@@ -27,6 +27,8 @@ export function createServer(opts: DevServerOptions): DevServer {
 	const port = opts.config.server.port;
 	const scriptDir = opts.config.dirs.script_dir;
 	const configDir = opts.config.dirs.config_dir;
+	const contentDir = opts.config.dirs.content_dir;
+
 	const asciidoctorProcessor = opts.asciidoctor;
 	const htmlRenderer = opts.html;
 	const router = opts.router;
@@ -85,7 +87,12 @@ export function createServer(opts: DevServerOptions): DevServer {
 	const middlewares = chain(
 		logging(log),
 		health(),
-		reservedStatic({ files: _staticFiles, scriptDir, configDir }),
+		reservedStatic({
+			files: _staticFiles,
+			scriptDir,
+			configDir,
+			contentDir,
+		}),
 		home(htmlRenderer),
 	);
 
