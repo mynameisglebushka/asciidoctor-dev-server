@@ -16,7 +16,8 @@ export interface FileAddEvent extends WebSocketEvent {
 export interface FileChangeEvent extends WebSocketEvent {
 	type: 'file_change';
 	data: {
-		route: string;
+		route?: string;
+		affected_routes?: string[];
 	};
 }
 

@@ -1,6 +1,4 @@
-import Processor, { Extensions } from '@asciidoctor/core';
-import { Reader } from '@asciidoctor/core';
-import { Document } from '@asciidoctor/core';
+import Processor, { Document, Extensions, Reader } from '@asciidoctor/core';
 import { register as registerKroki } from 'asciidoctor-kroki';
 import { ResolvedConfig } from './config';
 

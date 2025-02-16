@@ -1,5 +1,5 @@
 import { readdir } from 'node:fs';
-import { parse, join, resolve } from 'node:path';
+import { parse, join, resolve, extname, dirname } from 'node:path';
 import { Logger } from './logger';
 import { AsciidoctorProcessor, IncludedFile } from './asciidoctor';
 import { ResolvedConfig } from './config';
@@ -21,8 +21,9 @@ export interface Router {
 	readonly routes: RouterMap;
 	insertRoute(file: string): Route | undefined;
 	removeRouteByFile(file: string): boolean;
-	getFilePath(route: string): string | undefined;
-	getRouteByFilePath(file: string): Route | undefined;
+	getFileByRoute(route: string): string | undefined;
+	getRouteByFile(file: string): Route | undefined;
+	getRoutesByIncludedFile(file: string): Route[] | undefined;
 	getAbsPathByRoute(route: string): string | undefined;
 }
 
@@ -54,6 +55,15 @@ export function createRouter(opts: RouterOptions): Router {
 		};
 	};
 
+	const updateInfo = (info: RouteInfo) => {
+		const { title, included_files } = processor.collectFileInfo(
+			info.absPath,
+		);
+
+		info.title = title;
+		info.includedFiles = included_files;
+	};
+
 	const routerMap: RouterMap = new Map();
 
 	function insertRoute(_file: string): Route | undefined {
@@ -65,19 +75,17 @@ export function createRouter(opts: RouterOptions): Router {
 
 		const { route, file, absPath } = ok;
 
-		const { title, included_files } = processor.collectFileInfo(absPath);
-
 		if (routerMap.has(route)) {
 			log.debug(`file ${_file} already exist in router by ${route} path`);
 			return;
 		}
 
 		const routeInfo: RouteInfo = {
-			file: file,
-			title: title,
-			includedFiles: included_files,
+			file,
 			absPath,
 		};
+
+		updateInfo(routeInfo);
 
 		routerMap.set(route, routeInfo);
 
@@ -122,6 +130,8 @@ export function createRouter(opts: RouterOptions): Router {
 	function getRouteByFile(file: string): Route | undefined {
 		for (const [route, info] of routerMap) {
 			if (info.file === file) {
+				updateInfo(info);
+
 				return {
 					route,
 					...info,
@@ -132,13 +142,46 @@ export function createRouter(opts: RouterOptions): Router {
 		return undefined;
 	}
 
+	function getRoutesByIncludedFile(file: string): Route[] | undefined {
+		// file included with "include" directive stores without extensions
+		// because who cares, right?
+		file = resolve(path, file);
+		if (extname(file) === '.adoc') file = file.replace(/.adoc$/, '');
+
+		const result: Route[] = [];
+		routerMap.forEach((info, route) => {
+			if (!info.includedFiles) return;
+
+			for (const incFile of info.includedFiles) {
+				const incFilePath = resolve(
+					dirname(info.absPath),
+					incFile.path,
+				);
+
+				if (incFilePath === file) {
+					updateInfo(info);
+
+					result.push({
+						route,
+						...info,
+					});
+
+					return;
+				}
+			}
+		});
+
+		return result.length > 0 ? result : undefined;
+	}
+
 	const router: Router = {
 		routes: routerMap,
-		insertRoute: insertRoute,
-		removeRouteByFile: removeRouteByFile,
-		getFilePath: getFileByRoute,
-		getRouteByFilePath: getRouteByFile,
-		getAbsPathByRoute: getAbsPathByRoute,
+		insertRoute,
+		removeRouteByFile,
+		getFileByRoute,
+		getRouteByFile,
+		getRoutesByIncludedFile,
+		getAbsPathByRoute,
 	};
 
 	readdir(path, { recursive: true, encoding: 'utf-8' }, (err, files) => {

@@ -85,7 +85,7 @@ export function createServer(opts: DevServerOptions): DevServer {
 		});
 
 	const middlewares = chain(
-		logging(log),
+		// logging(log),
 		health(),
 		reservedStatic({
 			files: _staticFiles,

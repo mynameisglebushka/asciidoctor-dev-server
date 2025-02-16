@@ -36,7 +36,7 @@ export function startWatcher(opts: WatcherOptions) {
 	});
 
 	watcher.on('add', (path) => {
-		log.debug(`watcher find new file ${path}`);
+		log.debug(`file ${path} add`);
 		const _route = router.insertRoute(path);
 
 		if (!_route) return;
@@ -54,7 +54,7 @@ export function startWatcher(opts: WatcherOptions) {
 	});
 
 	watcher.on('unlink', (path: string) => {
-		log.debug(`watcher find file ${path} was removed`);
+		log.debug(`file ${path} unlink`);
 		if (!router.removeRouteByFile(path)) return;
 
 		wss.sendEventToAllConnectedClients(
@@ -66,15 +66,19 @@ export function startWatcher(opts: WatcherOptions) {
 	});
 
 	watcher.on('change', (path: string) => {
-		log.debug(`watcher find file ${path} was changed`);
-		const _route = router.getRouteByFilePath(path);
+		log.debug(`file ${path} change`);
+		const _route = router.getRouteByFile(path);
+		const _routes = router.getRoutesByIncludedFile(path);
 
-		if (!_route) return;
+		if (!_route && !_routes) return;
 
 		wss.sendEventToAllConnectedClients(
 			socketEvent<FileChangeEvent>({
 				type: 'file_change',
-				data: { route: _route.route },
+				data: {
+					route: _route?.route,
+					affected_routes: _routes?.map((r) => r.route),
+				},
 			}),
 		);
 	});

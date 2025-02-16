@@ -41,17 +41,14 @@ export const startWebSoket = (port: string) => {
 };
 
 const onFileChange = (event: FileChangeEvent) => {
-	const route = event.data.route;
+	const routes: string[] = [];
 
-	if (window.location.pathname !== route) {
-		console.log(
-			`current page "${window.location.pathname}" not affected by "${route}" file change`,
-		);
-		return;
+	if (event.data.route) routes.push(event.data.route);
+	if (event.data.affected_routes) routes.push(...event.data.affected_routes);
+
+	if (routes.includes(window.location.pathname)) {
+		window.location.reload();
 	}
-
-	console.log('Page content was changed');
-	window.location.reload();
 };
 
 const onFileAdd = (event: FileAddEvent) => {
