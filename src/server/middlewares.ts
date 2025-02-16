@@ -9,9 +9,9 @@ export const logging = (logger: Logger): Middleware => {
 	return (next: HandlerFunc): HandlerFunc => {
 		return (req, res) => {
 			const path = req.url || '/';
-			logger.info(`start request on ${path}`);
+			logger.info(`request: path - ${path}`);
 			next(req, res);
-			logger.info(`end request on ${path} with status ${res.statusCode}`);
+			logger.info(`response: path - ${path}, status - ${res.statusCode}`);
 		};
 	};
 };
@@ -105,11 +105,10 @@ export const reservedStatic = (opts: {
 					return;
 				}
 
-				const fileContent = readFileSync(path);
-
-				const contentType = mime.contentType(fileExt) || defaultMime;
-
-				writeContent(contentType, fileContent);
+				writeContent(
+					mime.contentType(fileExt) || defaultMime,
+					readFileSync(path),
+				);
 
 				return;
 			}

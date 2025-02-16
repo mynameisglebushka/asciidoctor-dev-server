@@ -71,12 +71,13 @@ export async function resolveConfig(
 	const current_workind_directory = process.cwd();
 	let content_directory = '';
 	if (serverOptions.workingDirectory) {
-		const stat = statSync(
-			resolve(current_workind_directory, serverOptions.workingDirectory),
-			{
-				throwIfNoEntry: false,
-			},
+		const abs = resolve(
+			current_workind_directory,
+			serverOptions.workingDirectory,
 		);
+		const stat = statSync(abs, {
+			throwIfNoEntry: false,
+		});
 
 		if (!stat) {
 			return `no such directory -> ${serverOptions.workingDirectory}`;
@@ -86,7 +87,7 @@ export async function resolveConfig(
 			return `path ${serverOptions.workingDirectory} is not a directory`;
 		}
 
-		content_directory = serverOptions.workingDirectory;
+		content_directory = abs;
 	} else {
 		content_directory = current_workind_directory;
 	}
@@ -114,13 +115,6 @@ export async function resolveConfig(
 	return Object.freeze(resolvedConfig);
 }
 
-// Резолвить пути в конфигах не нужно
-// На этапе middleware необходимо предусмотреть логику, что
-// Если пришел запрос на какой-то файл, и нет прификса __ads, значит путь указан через конфиг
-// И резолвить путь относительно директории конфига
-// Перед тем как делать resolve или join надо проверять, что в пути уже не содержитсья путь до конфига
-// Потому что при запросах http path всегда будет abs
-// Но ряд атрибутов стоит переопределить, если они не указаны
 function resolveAsciidoctorAttributes(
 	configPath: string,
 	userAttr: AsciidoctorAttributes = {},
