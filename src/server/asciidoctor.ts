@@ -75,6 +75,9 @@ export function createProcessor(
 			};
 		}
 
+		// В жопу этот ебучий каталог, список включенных файлов надежнее будет достать
+		// если рекурсивно пройтись по дереву документа
+		// и копить пути файлов из source_location
 		const catalog = doc.getCatalog() as CatalogWrapper;
 
 		const includes = catalog.includes.$$keys;
