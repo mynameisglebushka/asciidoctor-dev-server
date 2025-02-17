@@ -1,6 +1,12 @@
-import Processor, { Document, Extensions, Reader } from '@asciidoctor/core';
+import Processor, {
+	AbstractBlock,
+	Document,
+	Extensions,
+	Reader,
+} from '@asciidoctor/core';
 import { register as registerKroki } from 'asciidoctor-kroki';
 import { ResolvedConfig } from './config';
+import { basename } from 'node:path';
 
 interface FileInfo {
 	title?: string;
@@ -56,6 +62,15 @@ export function createProcessor(
 	}
 
 	function collectFileInfo(file: string): FileInfo {
+		function getBlockSource(dst: Map<string, null>, block: AbstractBlock) {
+			if (!block) return;
+
+			const path = block.getSourceLocation()?.getPath();
+			if (path) dst.set(path, null);
+
+			block.getBlocks()?.forEach((_block) => getBlockSource(dst, _block));
+		}
+
 		const register = asciidoctor.Extensions.create();
 
 		const files: IncludedFile[] = [];
@@ -69,27 +84,18 @@ export function createProcessor(
 			catalog_assets: true,
 		});
 
-		interface CatalogWrapper {
-			includes: {
-				$$keys: string[];
-			};
-		}
+		const includes = new Map<string, null>();
 
-		// В жопу этот ебучий каталог, список включенных файлов надежнее будет достать
-		// если рекурсивно пройтись по дереву документа
-		// и копить пути файлов из source_location
-		const catalog = doc.getCatalog() as CatalogWrapper;
+		getBlockSource(includes, doc);
 
-		const includes = catalog.includes.$$keys;
+		includes.delete(basename(file));
 
-		if (includes) {
-			for (const idx in includes) {
-				files.push({
-					type: 'include',
-					path: includes[idx],
-				});
-			}
-		}
+		includes.forEach((_, key) => {
+			files.push({
+				type: 'include',
+				path: key,
+			});
+		});
 
 		// For some reasons Asciidoctor.Document.getHeader() API says that return value is string, but for real is object
 		interface HeaderWrapper {
