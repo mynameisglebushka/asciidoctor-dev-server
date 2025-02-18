@@ -19,7 +19,6 @@ const config = {
 		dir: path_resolve(__dirname, '../dist/client'),
 		format: 'module',
 		entryFileNames: '@[name].js',
-		sourcemap: true,
 	},
 	plugins: [
 		typescript({
