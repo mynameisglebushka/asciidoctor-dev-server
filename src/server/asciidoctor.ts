@@ -134,6 +134,11 @@ function findIncludedContent(
 		doc: Document,
 		reader: Reader,
 	) {
+		// Если диаграмма подключена в файле под include директивой, то в таком формате ее не найти
+		// Необходимо делать readLine() чтобы reader спроцессил строку и добавил контент подключенного файла
+		// скорее всего надо сделать readLines() и работать с полным массивом строк сразу
+		// но пока непонятно, как запихнуть это обратно в работу процессора
+		// BUG!
 		const lines = reader.getLines();
 		for (let i = 0; i < lines.length; i++) {
 			if (lines[i].startsWith('plantuml::')) {
