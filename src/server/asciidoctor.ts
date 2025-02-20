@@ -13,7 +13,7 @@ interface FileInfo {
 	included_files?: IncludedFile[];
 }
 
-type IncludedType = 'include' | 'plantuml';
+type IncludedType = 'include' | 'plantuml' | 'kroki_diagram';
 
 export interface IncludedFile {
 	type: IncludedType;
@@ -79,6 +79,7 @@ export function createProcessor(
 
 		const doc = asciidoctor.loadFile(file, {
 			safe: 'safe',
+			parse: true,
 			sourcemap: true,
 			extension_registry: register,
 			catalog_assets: true,
@@ -139,21 +140,42 @@ function findIncludedContent(
 		// скорее всего надо сделать readLines() и работать с полным массивом строк сразу
 		// но пока непонятно, как запихнуть это обратно в работу процессора
 		// BUG!
-		const lines = reader.getLines();
-		for (let i = 0; i < lines.length; i++) {
-			if (lines[i].startsWith('plantuml::')) {
-				const result = lines[i].match(/plantuml::(.*?)\[[^\]]*\]/);
-				if (result === null || result.length < 2) return;
+		const _lines = reader.getLines();
+		const _file = reader.getCursor().getFile();
+		const _path = reader.getCursor().getPath();
+		const _ln = reader.getCursor().getLineNumber();
+
+		const lines = reader.read();
+
+		const krokiRegEx = /^(?<type>d2|plantuml)::(?<path>.*?)\[[^\]]*\]/gm;
+
+		const result = lines.matchAll(krokiRegEx);
+
+		if (result !== null) {
+			for (const match of result) {
+				if (!match.groups) continue;
 
 				dist.push({
-					type: 'plantuml',
-					path: result[1],
+					type: 'kroki_diagram',
+					path: match.groups?.path,
 				});
-
-				return;
 			}
 		}
-		return reader;
+
+		// for (let i = 0; i < _lines.length; i++) {
+		// 	if (_lines[i].startsWith('plantuml::')) {
+		// 		const result = _lines[i].match(/plantuml::(.*?)\[[^\]]*\]/);
+		// 		if (result === null || result.length < 2) return;
+
+		// 		dist.push({
+		// 			type: 'plantuml',
+		// 			path: result[1],
+		// 		});
+
+		// 		return;
+		// 	}
+		// }
+		return reader.pushInclude(_lines, _file, _path, _ln);
 	}
 
 	function preprocessor(this: Extensions.PreprocessorDsl) {
