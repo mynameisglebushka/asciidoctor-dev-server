@@ -155,6 +155,10 @@ function findIncludedContent(
 			for (const match of result) {
 				if (!match.groups) continue;
 
+				// Если в пути файла указана переменная типа {attribute}, то на этапе
+				// препроцессора с этим ничего не сделать, атрибуты оттуда не достаются
+				// необходимо искать другие пути извлечения информации
+
 				dist.push({
 					type: 'kroki_diagram',
 					path: match.groups?.path,
@@ -162,19 +166,6 @@ function findIncludedContent(
 			}
 		}
 
-		// for (let i = 0; i < _lines.length; i++) {
-		// 	if (_lines[i].startsWith('plantuml::')) {
-		// 		const result = _lines[i].match(/plantuml::(.*?)\[[^\]]*\]/);
-		// 		if (result === null || result.length < 2) return;
-
-		// 		dist.push({
-		// 			type: 'plantuml',
-		// 			path: result[1],
-		// 		});
-
-		// 		return;
-		// 	}
-		// }
 		return reader.pushInclude(_lines, _file, _path, _ln);
 	}
 
