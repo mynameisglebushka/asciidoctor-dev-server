@@ -82,7 +82,6 @@ export function createProcessor(
 			parse: true,
 			sourcemap: true,
 			extension_registry: register,
-			catalog_assets: true,
 		});
 
 		const includes = new Map<string, null>();
@@ -135,11 +134,6 @@ function findIncludedContent(
 		doc: Document,
 		reader: Reader,
 	) {
-		// Если диаграмма подключена в файле под include директивой, то в таком формате ее не найти
-		// Необходимо делать readLine() чтобы reader спроцессил строку и добавил контент подключенного файла
-		// скорее всего надо сделать readLines() и работать с полным массивом строк сразу
-		// но пока непонятно, как запихнуть это обратно в работу процессора
-		// BUG!
 		const _lines = reader.getLines();
 		const _file = reader.getCursor().getFile();
 		const _path = reader.getCursor().getPath();
@@ -155,13 +149,17 @@ function findIncludedContent(
 			for (const match of result) {
 				if (!match.groups) continue;
 
+				const filepath = match.groups.path;
+
+				// if (filepath.match(/[{}]/)) continue
+
 				// Если в пути файла указана переменная типа {attribute}, то на этапе
 				// препроцессора с этим ничего не сделать, атрибуты оттуда не достаются
 				// необходимо искать другие пути извлечения информации
 
 				dist.push({
 					type: 'kroki_diagram',
-					path: match.groups?.path,
+					path: filepath,
 				});
 			}
 		}
