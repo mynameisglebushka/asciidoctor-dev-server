@@ -1,5 +1,5 @@
 import { Extensions } from '@asciidoctor/core';
-import { dirname, isAbsolute, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { AsciiDoctorDevServerOptions } from './types/server-options';
 import { statSync } from 'node:fs';
 
@@ -57,14 +57,15 @@ export async function resolveConfig(
 	scriptDir: string,
 	serverOptions: AsciiDoctorDevServerOptions,
 ): Promise<ResolvedConfig | string> {
-	const configModule: { default: AsciiDoctorDevServerConfig } = await import(
-		configPath
-	);
+	let configModule: { default: AsciiDoctorDevServerConfig } = { default: {} };
+
+	if (configPath !== '') {
+		configModule = await import(configPath);
+	}
 
 	const config = configModule.default ?? {};
 
 	const adocAttrs = resolveAsciidoctorAttributes(
-		configPath,
 		config.asciidoctor?.attributes,
 	);
 
@@ -116,17 +117,12 @@ export async function resolveConfig(
 }
 
 function resolveAsciidoctorAttributes(
-	configPath: string,
 	userAttr: AsciidoctorAttributes = {},
 ): AsciidoctorAttributes {
 	const styleDir = userAttr['stylesdir'];
 	const stylesheet = userAttr['stylesheet'];
 
-	if (styleDir && typeof styleDir === 'string' && stylesheet) {
-		userAttr['stylesdir'] = isAbsolute(styleDir)
-			? styleDir
-			: configPath + styleDir;
-	} else {
+	if (!(styleDir && typeof styleDir === 'string' && stylesheet)) {
 		userAttr['stylesdir'] = defaultConfig.asciidoctor.attributes.stylesdir;
 		userAttr['stylesheet'] =
 			defaultConfig.asciidoctor.attributes.stylesheet;

@@ -16,6 +16,22 @@ let errorHappend = '';
 if (args) {
 	for (let i = 0; i < args.length; i++) {
 		const arg = args[i];
+		if (arg === '--config' || arg === '-c') {
+			if (i + 1 >= args.length) {
+				opts.configPath = '';
+				break;
+			}
+
+			if (args[i + 1].startsWith('-')) {
+				opts.configPath = '';
+				continue;
+			}
+
+			opts.configPath = args[i + 1];
+			i++;
+			
+			continue;
+		}
 		if (arg === '--debug' || arg === '-d') {
 			opts.debug = true;
 			continue;

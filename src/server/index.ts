@@ -22,19 +22,35 @@ export async function createDevServer(
 ) {
 	const logger = createLogger({ debug: options.debug || false });
 
-	const configLocations = [
-		join(cwd(), configName),
-		join(homedir() + '.ads/', configName),
-	];
-
 	let finalConfig = '';
-	for (const idx in configLocations) {
-		const maybeConfig = configLocations[idx];
+	if (options.configPath === undefined) {
+		const configLocations = [
+			join(cwd(), configName),
+			join(homedir() + '.ads/', configName),
+		];
 
-		if (existsSync(maybeConfig)) {
-			finalConfig = maybeConfig;
-			break;
+		for (const idx in configLocations) {
+			const maybeConfig = configLocations[idx];
+
+			if (existsSync(maybeConfig)) {
+				finalConfig = maybeConfig;
+				break;
+			}
 		}
+
+		logger.debug(
+			`${finalConfig === '' ? 'no config files on default paths' : `use config file on "${finalConfig}"`}`,
+		);
+	} else if (options.configPath !== '') {
+		if (!existsSync(options.configPath)) {
+			logger.error(`no config on "${options.configPath}"`);
+			return;
+		}
+
+		finalConfig = options.configPath;
+		logger.debug(`run with ${finalConfig} config file`);
+	} else {
+		logger.debug('run on default settings');
 	}
 
 	const script_directory = resolve(

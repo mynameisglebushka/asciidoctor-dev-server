@@ -96,7 +96,7 @@ export const reservedStatic = (opts: {
 			}
 
 			if (!['', '.'].includes(fileExt)) {
-				if (!path.includes(configPath)) {
+				if (configPath !== '' && !path.includes(configPath)) {
 					path = join(contentPath, path);
 				}
 
