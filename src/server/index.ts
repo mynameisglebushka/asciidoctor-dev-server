@@ -15,7 +15,7 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { cwd } from 'node:process';
 
-const configName = '.ads.config.js';
+const configFiles = ['.ads.config.js', '.ads.config.cjs', '.ads.config.mjs'];
 
 export async function createDevServer(
 	options: AsciiDoctorDevServerOptions = {},
@@ -24,17 +24,16 @@ export async function createDevServer(
 
 	let finalConfig = '';
 	if (options.configPath === undefined) {
-		const configLocations = [
-			join(cwd(), configName),
-			join(homedir() + '.ads/', configName),
-		];
+		const configDirs = [cwd(), join(homedir(), '.ads/')];
 
-		for (const idx in configLocations) {
-			const maybeConfig = configLocations[idx];
+		for (const i in configDirs) {
+			for (const j in configFiles) {
+				const maybeConfig = join(configDirs[i], configFiles[j]);
 
-			if (existsSync(maybeConfig)) {
-				finalConfig = maybeConfig;
-				break;
+				if (existsSync(maybeConfig)) {
+					finalConfig = maybeConfig;
+					break;
+				}
 			}
 		}
 
