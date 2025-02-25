@@ -23,6 +23,7 @@ const config = {
 	],
 	external: [
 		'picocolors',
+		'mime-types',
 		'ws',
 		'chokidar',
 		'asciidoctor-kroki',
