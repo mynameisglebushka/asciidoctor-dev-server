@@ -5,19 +5,20 @@ import { Logger } from './logger.js';
 import { extname, join } from 'node:path';
 import mime from 'mime-types';
 
-const RENDER_REQUEST_TYPES = ['.adoc', ''];
+const CAN_LOG_REQUEST = (path: string) => {
+	return ['.adoc', ''].includes(extname(path));
+};
 
 export const logging = (logger: Logger): Middleware => {
 	return (next: HandlerFunc): HandlerFunc => {
 		return (req, res) => {
 			const path = req.url || '/';
 
-			if (RENDER_REQUEST_TYPES.includes(extname(path)))
-				logger.info(`request: path - ${path}`);
+			if (CAN_LOG_REQUEST(path)) logger.info(`request: path - ${path}`);
 
 			next(req, res);
 
-			if (RENDER_REQUEST_TYPES.includes(extname(path)))
+			if (CAN_LOG_REQUEST(path))
 				logger.info(
 					`response: path - ${path}, status - ${res.statusCode}`,
 				);
