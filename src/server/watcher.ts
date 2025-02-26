@@ -5,7 +5,7 @@ import {
 	FileAddEvent,
 	FileChangeEvent,
 	FileRemovedEvent,
-	socketEvent,
+	socketServerEvent,
 } from '../shared/types/websocket-event.js';
 import { Logger } from './logger.js';
 import { ResolvedConfig } from './config.js';
@@ -42,7 +42,7 @@ export function startWatcher(opts: WatcherOptions) {
 		if (!_route) return;
 
 		wss.sendEventToAllConnectedClients(
-			socketEvent<FileAddEvent>({
+			socketServerEvent<FileAddEvent>({
 				type: 'file_added',
 				data: {
 					route: _route.route,
@@ -58,7 +58,7 @@ export function startWatcher(opts: WatcherOptions) {
 		if (!router.removeRouteByFile(path)) return;
 
 		wss.sendEventToAllConnectedClients(
-			socketEvent<FileRemovedEvent>({
+			socketServerEvent<FileRemovedEvent>({
 				type: 'file_remove',
 				data: { file: path },
 			}),
@@ -73,7 +73,7 @@ export function startWatcher(opts: WatcherOptions) {
 		if (!_route && !_routes) return;
 
 		wss.sendEventToAllConnectedClients(
-			socketEvent<FileChangeEvent>({
+			socketServerEvent<FileChangeEvent>({
 				type: 'file_change',
 				data: {
 					route: _route?.route,

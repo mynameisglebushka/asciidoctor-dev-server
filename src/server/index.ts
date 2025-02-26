@@ -81,7 +81,7 @@ export async function createDevServer(
 		router,
 	});
 
-	const wss = createWSServer({ httpServer: devServer });
+	const wss = createWSServer({ logger, httpServer: devServer });
 
 	startWatcher({ logger, config, router, wss });
 

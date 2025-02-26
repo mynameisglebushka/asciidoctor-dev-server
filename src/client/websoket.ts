@@ -1,8 +1,10 @@
 import {
+	ConnectionEvent,
 	FileAddEvent,
 	FileChangeEvent,
 	FileRemovedEvent,
-	WebSocketEvent,
+	socketClientEvent,
+	WebSocketServerEvent,
 } from '../shared/types/websocket-event';
 import { isNavbarPage, updateNavbar } from './render-navbar';
 
@@ -10,11 +12,18 @@ export const startWebSoket = (port: string) => {
 	const ws = new WebSocket(`ws://localhost:${port}`);
 
 	ws.onopen = () => {
-		ws.send(`Client, connected on ${window.location.toString()}!`);
+		ws.send(
+			socketClientEvent<ConnectionEvent>({
+				type: 'connect',
+				data: {
+					path: document.location.pathname,
+				},
+			}),
+		);
 	};
 
 	ws.onmessage = (event) => {
-		const messageData = JSON.parse(event.data) as WebSocketEvent;
+		const messageData = JSON.parse(event.data) as WebSocketServerEvent;
 
 		switch (messageData.type) {
 			case 'file_added': {

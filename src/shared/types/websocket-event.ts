@@ -1,10 +1,15 @@
-export type WebSocketEventType = 'file_change' | 'file_remove' | 'file_added';
+// Servers
 
-export interface WebSocketEvent {
-	type: WebSocketEventType;
+export type WebSocketServerEventType =
+	| 'file_change'
+	| 'file_remove'
+	| 'file_added';
+
+export interface WebSocketServerEvent {
+	type: WebSocketServerEventType;
 }
 
-export interface FileAddEvent extends WebSocketEvent {
+export interface FileAddEvent extends WebSocketServerEvent {
 	type: 'file_added';
 	data: {
 		route: string;
@@ -13,7 +18,7 @@ export interface FileAddEvent extends WebSocketEvent {
 	};
 }
 
-export interface FileChangeEvent extends WebSocketEvent {
+export interface FileChangeEvent extends WebSocketServerEvent {
 	type: 'file_change';
 	data: {
 		route?: string;
@@ -21,13 +26,36 @@ export interface FileChangeEvent extends WebSocketEvent {
 	};
 }
 
-export interface FileRemovedEvent extends WebSocketEvent {
+export interface FileRemovedEvent extends WebSocketServerEvent {
 	type: 'file_remove';
 	data: {
 		file: string;
 	};
 }
 
-export const socketEvent = <T extends WebSocketEvent>(event: T): string => {
+export const socketServerEvent = <T extends WebSocketServerEvent>(
+	event: T,
+): string => {
+	return JSON.stringify(event);
+};
+
+// Clients
+
+export type WebSocketClientEventType = 'connect';
+
+export interface WebSocketClientEvent {
+	type: WebSocketClientEventType;
+}
+
+export interface ConnectionEvent extends WebSocketClientEvent {
+	type: 'connect';
+	data: {
+		path: string;
+	};
+}
+
+export const socketClientEvent = <T extends WebSocketClientEvent>(
+	event: T,
+): string => {
 	return JSON.stringify(event);
 };
