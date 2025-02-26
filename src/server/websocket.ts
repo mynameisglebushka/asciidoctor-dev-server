@@ -37,7 +37,7 @@ export function createWSServer(opts: WSServerOptions): WSServer {
 
 const connectionHandler = (logger: Logger) => {
 	return function (s: WebSocket) {
-		s.on('error', console.error);
+		s.on('error', (err) => logger.error(err.message));
 
 		s.on('message', function message(data) {
 			const msg = JSON.parse(data.toString()) as WebSocketClientEvent;

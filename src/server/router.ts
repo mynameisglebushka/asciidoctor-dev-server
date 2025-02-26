@@ -185,7 +185,7 @@ export function createRouter(opts: RouterOptions): Router {
 	};
 
 	readdir(path, { recursive: true, encoding: 'utf-8' }, (err, files) => {
-		if (err) console.log(err);
+		if (err) log.error(err.message);
 		else {
 			files.forEach((_file) => {
 				router.insertRoute(_file);
