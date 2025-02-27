@@ -99,7 +99,6 @@ export const reservedStatic = (opts: {
 
 			const fileExt = extname(path);
 
-			// TODO: Доработать хэндлер на прием .adoc запросов
 			if (fileExt === '.adoc') {
 				next(req, res);
 				return;

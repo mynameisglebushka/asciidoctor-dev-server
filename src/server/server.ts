@@ -7,6 +7,7 @@ import { HandlerFunc } from './types/routing.js';
 import { reservedStatic, chain, health, home, logging } from './middlewares.js';
 import { Logger } from './logger.js';
 import { ResolvedConfig } from './config.js';
+import { join, parse } from 'node:path';
 
 export interface DevServer {
 	server: Server;
@@ -35,7 +36,7 @@ export function createServer(opts: DevServerOptions): DevServer {
 
 	const handler: HandlerFunc = (req, res) => {
 		try {
-			const url = req.url || '/';
+			const url = normalizePath(req.url);
 
 			const path = router.getAbsPathByRoute(url);
 			if (!path) {
@@ -106,4 +107,14 @@ export function createServer(opts: DevServerOptions): DevServer {
 	};
 
 	return server;
+}
+
+function normalizePath(path?: string): string {
+	if (!path) return '/';
+
+	const pp = parse(path);
+
+	if (pp.ext === '.adoc') return join(pp.dir, pp.name);
+
+	return path;
 }
