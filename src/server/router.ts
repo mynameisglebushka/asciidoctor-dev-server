@@ -1,5 +1,5 @@
 import { readdir } from 'node:fs';
-import { parse, join, resolve, extname, dirname } from 'node:path';
+import { parse, join, resolve, dirname } from 'node:path';
 import { Logger } from './logger';
 import { AsciidoctorProcessor, IncludedFile } from './asciidoctor';
 import { ResolvedConfig } from './config';
@@ -143,10 +143,7 @@ export function createRouter(opts: RouterOptions): Router {
 	}
 
 	function getRoutesByIncludedFile(file: string): Route[] | undefined {
-		// file included with "include" directive stores without extensions
-		// because who cares, right?
 		file = resolve(path, file);
-		if (extname(file) === '.adoc') file = file.replace(/.adoc$/, '');
 
 		const result: Route[] = [];
 		routerMap.forEach((info, route) => {
