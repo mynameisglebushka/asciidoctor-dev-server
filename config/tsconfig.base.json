@@ -5,7 +5,6 @@
 		"module": "ESNext",
 		"moduleResolution": "bundler",
 		"strict": true,
-		"declaration": true,
 		"noImplicitOverride": true,
 		"noUnusedLocals": true,
 		"useUnknownInCatchVariables": false,

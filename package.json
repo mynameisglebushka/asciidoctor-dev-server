@@ -8,21 +8,22 @@
 		"asciidoctor-dev-server": "./bin/asciidoctor-dev-server.js"
 	},
 	"scripts": {
+		"clean": "rm -rf dist/",
 		"build": "pnpm run build:client && pnpm run build:server",
 		"build:client": "rollup --config config/rollup.client.config.js",
 		"build:server": "rollup --config config/rollup.server.config.js",
 		"server": "node ./bin/asciidoctor-dev-server.js -d",
-		"bs": "pnpm build && pnpm run server",
-		"path": "pnpm link -g"
+		"ultimate": "pnpm run clean && pnpm build && pnpm run server"
 	},
 	"keywords": [
-		"asciidoc"
+		"asciidoc",
+		"asciidoctor",
+		"dev-server"
 	],
-	"license": "-",
+	"license": "MIT",
 	"devDependencies": {
 		"@eslint/js": "^9.18.0",
 		"@rollup/plugin-commonjs": "^28.0.2",
-		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^16.0.0",
 		"@rollup/plugin-typescript": "^12.1.2",
 		"@types/jsdom": "^21.1.7",
@@ -45,5 +46,10 @@
 		"mime-types": "^2.1.35",
 		"picocolors": "^1.1.1",
 		"ws": "^8.18.0"
-	}
+	},
+	"files": [
+		"bin/*",
+		"dist/**/*",
+		"public/*"
+	]
 }
