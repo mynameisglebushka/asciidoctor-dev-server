@@ -6,6 +6,6 @@
 		"target": "ES2022",
 		"skipLibCheck": true,
 		"stripInternal": true,
-		"declarationDir": "../dist/server/types"
+		// "declarationDir": "../dist/server/types"
 	}
 }
