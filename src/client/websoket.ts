@@ -55,8 +55,22 @@ const onFileChange = (event: FileChangeEvent) => {
 	if (event.data.route) routes.push(event.data.route);
 	if (event.data.affected_routes) routes.push(...event.data.affected_routes);
 
-	if (routes.includes(window.location.pathname)) {
-		window.location.reload();
+	const originalPath = window.location.pathname;
+	const extensionStart = originalPath.indexOf(
+		'.',
+		originalPath.lastIndexOf('/') !== -1
+			? originalPath.lastIndexOf('/')
+			: 0,
+	);
+
+	let basePath = '';
+	if (extensionStart !== -1) {
+		basePath = originalPath.slice(0, extensionStart);
+	}
+
+	for (const route of routes) {
+		if (route === originalPath) window.location.reload();
+		if (basePath !== '' || route === basePath) window.location.reload();
 	}
 };
 
